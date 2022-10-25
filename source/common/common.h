@@ -19,9 +19,12 @@ typedef uint8_t bool;
 typedef enum 
 {
     DAPP_OK = 0,
-    DAPP_FAIL,
+    DAPP_FAIL = 1001,
     DAPP_ERR_PARAM,
     DAPP_ERR_MEM,
+    DAPP_ERR_FILE,
+    DAPP_ERR_JSON_FMT,
+    DAPP_ERR_JSON_CONF,
 } STATUS;
 
 #endif
