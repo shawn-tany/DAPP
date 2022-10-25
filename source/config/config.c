@@ -177,14 +177,14 @@ STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_
      * Load json objects from a file
      */
     if (!(root = json_load_file(file_name, 0, &error))) {
-        printf("json error   :\n"
-               "    column   : %d\n"
-               "    line     : %d\n"
-               "    porition : %d\n"
-               "    source   : %s\n"
-               "    text     : %s\n", 
-               error.column, error.line, 
-               error.position, error.source, error.text);
+        DAPP_TRACE("json error   :\n"
+                   "    column   : %d\n"
+                   "    line     : %d\n"
+                   "    porition : %d\n"
+                   "    source   : %s\n"
+                   "    text     : %s\n", 
+                   error.column, error.line, 
+                   error.position, error.source, error.text);
         return DAPP_ERR_JSON_FMT;
     }
 

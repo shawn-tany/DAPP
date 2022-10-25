@@ -12,6 +12,7 @@ CFLAGS = -I $(COMMON_DIR)
 CFLAGS += -I $(CONFIG_DIR)
 CFLAGS += -I $(LIB_DIR)
 CFLAGS += -g
+CFLAGS += -DDAPP_DEBUG
 
 LIBS = $(LIB_DIR)/libjansson.a
 

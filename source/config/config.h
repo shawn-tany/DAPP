@@ -59,8 +59,14 @@ typedef struct
     dapp_dynamic_conf_t dynamic_conf;
 } dapp_conf_t;
 
+/*
+ * Resolve static configuration
+ */
 STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_name);
 
+/*
+ * Resolve dynamic configuration
+ */
 void dapp_static_conf_dump(dapp_static_conf_t *static_conf);
 
 #endif
