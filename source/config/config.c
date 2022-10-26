@@ -222,7 +222,8 @@ STATIC_CONF_FAIL:
 void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
 {
     if (static_conf) {
-        printf("static config :\n"
+        printf("##\n"
+               "static config :\n"
                "    port config :\n"
                "        thread num = %d\n"
                "        mempool :\n"
@@ -253,7 +254,8 @@ void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
                static_conf->proto_identi.thread_num);
         printf("\n");
         printf("    rule_match config :\n"
-               "        thread num = %d\n", 
+               "        thread num = %d\n"
+               "##\n",
                static_conf->rule_match.thread_num);
     }
 }
