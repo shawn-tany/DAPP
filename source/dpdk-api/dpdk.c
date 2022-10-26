@@ -1,6 +1,16 @@
 #include "dpdk.h"
 
-int dpdk_init(int *argc, char *argv[])
+int dpdk_init(dpdk_eal_args_t *dpdk_eal_args)
 {
-    
+    rte_eal_init(dpdk_eal_args->argc, dpdk_eal_args->argv);
+}
+
+int dpdk_run()
+{
+	
+}
+
+int dpdk_exit()
+{
+	
 }

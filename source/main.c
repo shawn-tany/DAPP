@@ -3,12 +3,12 @@
 #include <getopt.h>
 #include "common.h"
 #include "config.h"
+#include "dpdk.h"
 
 #define STATIC_CONF_FILE "../install/config/static.conf"
 #define DYNAMIC_CONF_FILE "../install/config/dynamic.conf"
 
 #define CONF_FILE_NAME_SIZE (256)
-#define DAPP_DPDK_ARGC (32)
 
 typedef struct {
     char static_conf_file[CONF_FILE_NAME_SIZE];
@@ -66,14 +66,16 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
     return DAPP_OK;
 }
 
-static STATUS dapp_dpdk_args_set(int *argc, char *argv[], dapp_static_conf_t *static_conf)
+static STATUS dapp_dpdk_args_set(dpdk_eal_args_t *dpdk_eal_args, dapp_static_conf_t *static_conf)
 {
-    *argc = 1;
-    
+	if (!dpdk_eal_args || !static_conf) {
+		return DAPP_ERR_PARAM;
+	}
+
     /*
      * lcore
      */
-    int thread_num = 0;
+    int thread_num = 1;
     thread_num += static_conf->port.thread_num;
     thread_num += static_conf->flow_iotonic.thread_num;
     thread_num += static_conf->proto_identi.thread_num;
@@ -81,12 +83,9 @@ static STATUS dapp_dpdk_args_set(int *argc, char *argv[], dapp_static_conf_t *st
 
     int i = 0;
     uint64_t lcore_mask = 0;
-    for (i = 0; i < thread_num; ++i) {
-        sprintf(argv[argc] + , "%d@(%d)", i, cfg->cpu[i]);
-    }
-    
-    
-    sprintf(argv[argc], "--lcores=", )
+    sprintf(dpdk_eal_args->argv[dpdk_eal_args->argc++], "--lcores=11111");
+
+	return DAPP_OK;
 }
 
 int main(int argc, char *argv[])
@@ -120,12 +119,14 @@ int main(int argc, char *argv[])
      */
     dapp_static_conf_dump(&static_conf);
 
-    int argc0 = 1;
-    char *argv0[]
+    dpdk_eal_args_t dpdk_eal_args;
+	memset(&dpdk_eal_args, 0, sizeof(dpdk_eal_args));
+	dpdk_eal_args.argc = 1;
+	sprintf(dpdk_eal_args.argv[0], "%s", argv[0]);
     /*
      * set dpdk eal init args
      */
-    if (DAPP_OK != (ret = dapp_dpdk_args_set(&argc, argv, &static_conf))) {
+    if (DAPP_OK != (ret = dapp_dpdk_args_set(&dpdk_eal_args, &static_conf))) {
         printf("dapp_dpdk_args_set fail\n");
         return ret;
     }
