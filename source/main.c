@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
         return ret;
     }
     
+    dpdk_init(&dpdk_eal_args);
 
     return DAPP_OK;
 }
