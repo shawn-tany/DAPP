@@ -1,3 +1,5 @@
+
+
 # compile tool
 CC = gcc
 
@@ -31,7 +33,7 @@ CFLAGS += -I $(LIB_DPDK_DIR)/include
 
 CFLAGS += -g
 CFLAGS += -DDAPP_DEBUG
-CFLAGS += -O3
+CFLAGS += -O0
 
 CFLAGS += -lpthread -lnuma -ldl
 

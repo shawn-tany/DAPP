@@ -26,6 +26,7 @@ typedef enum
     DAPP_ERR_FILE,
     DAPP_ERR_JSON_FMT,
     DAPP_ERR_JSON_CONF,
+    DAPP_ERR_EAL_PARAM,
 } STATUS;
 
 #ifdef DAPP_DEBUG
@@ -33,5 +34,7 @@ typedef enum
 #else
     #define DAPP_TRACE(format, ...) do { } while(0)
 #endif
+
+#define ITEM(a) (sizeof(a) / sizeof(a[0]))
 
 #endif

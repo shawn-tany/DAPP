@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <getopt.h>
+#include <assert.h>
+
 #include "common.h"
 #include "config.h"
 #include "dpdk.h"
@@ -66,26 +69,87 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
     return DAPP_OK;
 }
 
-static STATUS dapp_dpdk_args_set(dpdk_eal_args_t *dpdk_eal_args, dapp_static_conf_t *static_conf)
+static dapp_dpdk_args_alloc_set(dpdk_eal_args_t *dpdk_eal_args, char *arg)
 {
-    if (!dpdk_eal_args || !static_conf) {
+    if (!dpdk_eal_args || !arg) {
         return DAPP_ERR_PARAM;
     }
 
+    if (dpdk_eal_args->argc >= ITEM(dpdk_eal_args->argv))
+    {
+        return DAPP_ERR_EAL_PARAM;
+    }
+
+    dpdk_eal_args->argv[dpdk_eal_args->argc] = (char *)malloc(DPDK_EAL_ARGV_SIZE);
+    assert(NULL != dpdk_eal_args->argv[dpdk_eal_args->argc]);
+    snprintf(dpdk_eal_args->argv[dpdk_eal_args->argc], DPDK_EAL_ARGV_SIZE, "%s", arg);
+    dpdk_eal_args->argc++;
+
+    return DAPP_OK;
+}
+
+static STATUS dapp_dpdk_args_init(char *first, dapp_static_conf_t *static_conf, dpdk_eal_args_t **dpdk_eal_args)
+{
+    if (!first || !static_conf) {
+        return DAPP_ERR_PARAM;
+    }
+
+    (*dpdk_eal_args) = (dpdk_eal_args_t *)malloc(sizeof(dpdk_eal_args_t));
+    assert(NULL != (*dpdk_eal_args));
+    memset((*dpdk_eal_args), 0, sizeof(dpdk_eal_args_t));
+
     /*
-     * lcore
+     * first arg
+     */
+    dapp_dpdk_args_alloc_set(*dpdk_eal_args, first);
+
+    char cmd[DPDK_EAL_ARGV_SIZE];
+
+    /*
+     * arg lcore mask
      */
     int thread_num = 1;
+    uint64_t lcore_mask = 7;
     thread_num += static_conf->port.thread_num;
     thread_num += static_conf->flow_iotonic.thread_num;
     thread_num += static_conf->proto_identi.thread_num;
     thread_num += static_conf->rule_match.thread_num;
-
-    int i = 0;
-    uint64_t lcore_mask = 0;
-    sprintf(dpdk_eal_args->argv[dpdk_eal_args->argc++], "--lcores=11111");
-
+    
+    snprintf(cmd, sizeof(cmd), "-c%lu", lcore_mask);
+    dapp_dpdk_args_alloc_set(*dpdk_eal_args, cmd);
+    
     return DAPP_OK;
+}
+
+static void dapp_dpdk_args_exit(dpdk_eal_args_t *dpdk_eal_args)
+{
+    int i = 0;
+
+    if (dpdk_eal_args) {
+        for (i = 1; i < dpdk_eal_args->argc; ++i) {
+            if (dpdk_eal_args->argv[i]) {
+                free(dpdk_eal_args->argv[i]);
+            }
+        }
+
+        free(dpdk_eal_args);
+    }
+}
+
+static int dapp_business_loop(__attribute__((unused)) void *arg)
+{
+    unsigned lcore_id;
+    lcore_id = dpdk_lcore_id();
+    printf("dapp_business_loop lcore(%u)\n", lcore_id);
+    return 0;
+}
+
+static int dapp_control_loop(__attribute__((unused)) void *arg)
+{
+    unsigned lcore_id;
+    lcore_id = dpdk_lcore_id();
+    printf("dapp_control_loop lcore(%u)\n", lcore_id);
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -119,19 +183,22 @@ int main(int argc, char *argv[])
      */
     dapp_static_conf_dump(&static_conf);
 
-    dpdk_eal_args_t dpdk_eal_args;
-    memset(&dpdk_eal_args, 0, sizeof(dpdk_eal_args));
-    dpdk_eal_args.argc = 1;
-    sprintf(dpdk_eal_args.argv[0], "%s", argv[0]);
+    dpdk_eal_args_t *dpdk_eal_args = NULL;
     /*
      * set dpdk eal init args
      */
-    if (DAPP_OK != (ret = dapp_dpdk_args_set(&dpdk_eal_args, &static_conf))) {
-        printf("dapp_dpdk_args_set fail\n");
+    if (DAPP_OK != (ret = dapp_dpdk_args_init(argv[0], &static_conf, &dpdk_eal_args))) {
+        printf("dapp_dpdk_args_init fail\n");
         return ret;
     }
     
-    dpdk_init(&dpdk_eal_args);
+    dpdk_init(dpdk_eal_args);
+
+    dpdk_run(dapp_business_loop, NULL, dapp_control_loop, NULL);
+
+    dpdk_exit();
+
+    dapp_dpdk_args_exit(dpdk_eal_args);
 
     return DAPP_OK;
 }
