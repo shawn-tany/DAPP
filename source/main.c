@@ -68,9 +68,9 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
 
 static STATUS dapp_dpdk_args_set(dpdk_eal_args_t *dpdk_eal_args, dapp_static_conf_t *static_conf)
 {
-	if (!dpdk_eal_args || !static_conf) {
-		return DAPP_ERR_PARAM;
-	}
+    if (!dpdk_eal_args || !static_conf) {
+        return DAPP_ERR_PARAM;
+    }
 
     /*
      * lcore
@@ -85,7 +85,7 @@ static STATUS dapp_dpdk_args_set(dpdk_eal_args_t *dpdk_eal_args, dapp_static_con
     uint64_t lcore_mask = 0;
     sprintf(dpdk_eal_args->argv[dpdk_eal_args->argc++], "--lcores=11111");
 
-	return DAPP_OK;
+    return DAPP_OK;
 }
 
 int main(int argc, char *argv[])
@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
     dapp_static_conf_dump(&static_conf);
 
     dpdk_eal_args_t dpdk_eal_args;
-	memset(&dpdk_eal_args, 0, sizeof(dpdk_eal_args));
-	dpdk_eal_args.argc = 1;
-	sprintf(dpdk_eal_args.argv[0], "%s", argv[0]);
+    memset(&dpdk_eal_args, 0, sizeof(dpdk_eal_args));
+    dpdk_eal_args.argc = 1;
+    sprintf(dpdk_eal_args.argv[0], "%s", argv[0]);
     /*
      * set dpdk eal init args
      */

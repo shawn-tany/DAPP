@@ -1,37 +1,43 @@
+# compile tool
+CC = gcc
+
+# binary name
 APP = dapp
 
+# all directory are defined in here
 COMMON_DIR = common
 CONFIG_DIR = config
-LIB_DIR = ../lib
 DPDK_API_DIR = dpdk-api
+LIB_JANSSON_DIR = ../lib/jansson
+LIB_DPDK_DIR = ../lib/dpdk
+
 BUILD_DIR = ../build
 
+# all source are stored in SRCS
 SRCS = main.c 
 SRCS += $(CONFIG_DIR)/config.c
 SRCS += $(DPDK_API_DIR)/dpdk.c
 
-CFLAGS = -I $(COMMON_DIR)
+# all library are stored in SRCS
+LIBS = $(LIB_JANSSON_DIR)/lib/libjansson.a 
+LIBS += $(LIB_DPDK_DIR)//lib/libdpdk.a 
+
+CFLAGS += -I $(COMMON_DIR)
 CFLAGS += -I $(CONFIG_DIR)
-CFLAGS += -I $(LIB_DIR)
 CFLAGS += -I $(DPDK_API_DIR)
+
+CFLAGS += -I $(LIB_JANSSON_DIR)/include
+CFLAGS += -I $(LIB_DPDK_DIR)/include
+
 CFLAGS += -g
 CFLAGS += -DDAPP_DEBUG
+CFLAGS += -O3
 
-LIBS = $(LIB_DIR)/libjansson.a
+CFLAGS += -lpthread -lnuma -ldl
 
 ifeq ($(RTE_SDK),)
 $(error "Please define RTE_SDK environment variable")
 endif
 
-include $(RTE_SDK)/mk/rte.vars.mk
-
-CFLAGS += -O3
-CFLAGS += $(WERROR_FLAGS)
-
-include $(RTE_SDK)/mk/rte.extapp.mk
-
 ALL :
-	gcc $(SRCS) $(CFLAGS) $(LIBS) -o $(BUILD_DIR)/$(APP)
-
-clean :
-	rm $(APP)
+	$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/$(APP) $(LIBS)

@@ -97,7 +97,6 @@ static STATUS dapp_static_conf_proto_identi_obj_parse(dapp_static_conf_t *static
     }
 
     json_t *obj = NULL;
-    json_t *sub_obj = NULL;
 
     if (!(obj = json_object_get(proto_identi, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
@@ -114,7 +113,6 @@ static STATUS dapp_static_conf_rule_match_obj_parse(dapp_static_conf_t *static_c
     }
 
     json_t *obj = NULL;
-    json_t *sub_obj = NULL;
 
     if (!(obj = json_object_get(rule_match, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
@@ -131,7 +129,6 @@ static STATUS dapp_static_conf_obj_parse(dapp_static_conf_t *static_conf, json_t
     }
 
     json_t *obj = NULL;
-    json_t *sub_obj = NULL;
 
     /* port parse */
     if (!(obj = json_object_get(conf, "port"))) {
@@ -262,7 +259,7 @@ void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
 
 STATUS dapp_dynamic_conf_parse(dapp_dynamic_conf_t *dynamic_conf, const char *file_name)
 {
-    if (!dynamic_conf) {
+    if (!dynamic_conf || !file_name) {
         return DAPP_ERR_PARAM;
     }
 

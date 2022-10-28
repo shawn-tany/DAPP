@@ -69,4 +69,9 @@ STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_
  */
 void dapp_static_conf_dump(dapp_static_conf_t *static_conf);
 
+/*
+ * Resolve dynamic configuration
+ */
+STATUS dapp_dynamic_conf_parse(dapp_dynamic_conf_t *dynamic_conf, const char *file_name);
+
 #endif

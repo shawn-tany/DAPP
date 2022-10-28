@@ -1,4 +1,5 @@
 #include "dpdk.h"
+#include "rte_eal.h"
 
 int dpdk_init(dpdk_eal_args_t *dpdk_eal_args)
 {
@@ -7,10 +8,10 @@ int dpdk_init(dpdk_eal_args_t *dpdk_eal_args)
 
 int dpdk_run()
 {
-	
+    return 0;
 }
 
 int dpdk_exit()
 {
-	
+    return 0;
 }
