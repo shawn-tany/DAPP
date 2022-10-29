@@ -8,14 +8,21 @@ unsigned dpdk_lcore_id(void)
     return rte_lcore_id();
 }
 
-int dpdk_init(dpdk_eal_args_t *dpdk_eal_args)
+int dpdk_init(void *arg, eal_args_parse_callback args_parse)
 {
-    if (!dpdk_eal_args) {
+    if (!arg || !args_parse) {
         return -1;
     }
+
+    int argc = 0;
+    char *argv[DPDK_ARG_NUM] = {0};
+
+    if (0 > args_parse(&argc, argv, arg)) {
+        rte_panic("Cannot parse eal param\n");
+    }
     
-    if (0 > rte_eal_init(dpdk_eal_args->argc, dpdk_eal_args->argv)) {
-        rte_panic("Cannot init EAL\n");
+    if (0 > rte_eal_init(argc, argv)) {
+        rte_panic("Cannot init eal\n");
         return -1;
     }
 
@@ -28,7 +35,7 @@ int dpdk_run(int (*slave_loop)(void *), void *slave_arg, int (*master_loop)(void
 
     if (!slave_loop) {
         return -1;
-    } 
+    }
 
     /*
      * call slave_loop() on every slave lcore
@@ -59,5 +66,5 @@ void dpdk_exit(void)
     /*
      * clean up the EAL
      */
-    rte_eal_cleanup;
+    rte_eal_cleanup();
 }

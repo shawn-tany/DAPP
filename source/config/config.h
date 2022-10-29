@@ -13,18 +13,18 @@ typedef struct {
 
 typedef struct {
     uint8_t port_num;
-    char port[DAPP_MAX_PORT_NUM][DAPP_PORT_NAME_SIZE];
-} dapp_port_list_t;
+    char ports[DAPP_MAX_PORT_NUM][DAPP_PORT_NAME_SIZE];
+} dapp_port_conf_t;
 
 /*
- * Static configuration, which cannot be modified at runtime
+ * init configuration, which cannot be modified at runtime
  */
 typedef struct 
 {
     struct {
         uint8_t thread_num;
         dapp_mempool_conf_t mempool;
-        dapp_port_list_t port_list;
+        dapp_port_conf_t port;
     } port;
 
     struct {
@@ -40,38 +40,16 @@ typedef struct
     struct {
         uint8_t thread_num;
     } proto_identi;
-} dapp_static_conf_t;
-
-/*
- * Dynamic configuration, which can be modified at runtime
- */
-typedef struct 
-{
-    
-} dapp_dynamic_conf_t;
-
-/*
- * All configuration
- */
-typedef struct 
-{
-    dapp_static_conf_t static_conf;
-    dapp_dynamic_conf_t dynamic_conf;
 } dapp_conf_t;
 
 /*
  * Resolve static configuration
  */
-STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_name);
+STATUS dapp_conf_parse(dapp_conf_t *conf, const char *file_name);
 
 /*
  * Resolve dynamic configuration
  */
-void dapp_static_conf_dump(dapp_static_conf_t *static_conf);
-
-/*
- * Resolve dynamic configuration
- */
-STATUS dapp_dynamic_conf_parse(dapp_dynamic_conf_t *dynamic_conf, const char *file_name);
+void dapp_conf_dump(dapp_conf_t *static_conf);
 
 #endif

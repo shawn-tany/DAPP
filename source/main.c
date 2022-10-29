@@ -7,23 +7,97 @@
 #include "common.h"
 #include "config.h"
 #include "dpdk.h"
+#include "dapp_code.h"
 
-#define STATIC_CONF_FILE "../install/config/static.conf"
-#define DYNAMIC_CONF_FILE "../install/config/dynamic.conf"
+#define CONF_FILE "../install/config/startup.conf"
+#define RULE_FILE "../install/config/rule.conf"
 
 #define CONF_FILE_NAME_SIZE (256)
 
+#define RUNNING (1)
+#define EXIT    (0)
+
+enum 
+{
+    MODULES_CTRL = 0,
+    MODULES_PORT_TRANS,
+    MODULES_PROTO_IDENTI,
+    MODULES_RULE_MATCH,
+    MODULES_FLOW_ISOTONIC,
+    MODULES_DATA_RESTORE,
+    MODULES_FILE_IDENTI,
+    MODULES_TYPE_NUM,
+};
+
 typedef struct {
-    char static_conf_file[CONF_FILE_NAME_SIZE];
-    char dynamic_conf_file[CONF_FILE_NAME_SIZE];
+    char *program;
+
+    struct {
+        uint64_t lcore_mask;
+    } lcores;
+
+    struct {
+        struct {
+            uint8_t lcore_start;
+            uint8_t lcore_end;
+            uint8_t lcore_num;
+        } lcore;
+
+        struct {
+            uint8_t running;
+        } status;
+        
+    } modules[MODULES_TYPE_NUM];
+    
 } dapp_ctrl_t;
 
-static struct option long_options[] = {
-    {"statis",      1,  0,  's'},
-    {"dynamic",     1,  0,  'd'},
-    {"help",        0,  0,  'h'},
-    {0,             0,  0,  0}
-};
+static STATUS dapp_ctrl_init(dapp_conf_t *conf, dapp_ctrl_t *ctrl)
+{
+    uint64_t bit_offset = 0;
+    uint64_t module_mask = 0;
+
+    /*
+     * lcore
+     */
+    ctrl->modules[MODULES_CTRL].lcore.lcore_start = 0;
+    ctrl->modules[MODULES_CTRL].lcore.lcore_end = 0;
+    ctrl->modules[MODULES_CTRL].lcore.lcore_num = 1;
+    ctrl->modules[MODULES_CTRL].status.running = RUNNING;
+    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    bit_offset += 1;
+    
+    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_start = bit_offset;
+    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_end = bit_offset + conf->port.thread_num;
+    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_num = conf->port.thread_num;
+    ctrl->modules[MODULES_PORT_TRANS].status.running = RUNNING;
+    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    bit_offset += conf->port.thread_num;
+
+    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_start = bit_offset;
+    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_end = bit_offset + conf->proto_identi.thread_num;
+    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_num = conf->proto_identi.thread_num;
+    ctrl->modules[MODULES_PROTO_IDENTI].status.running = RUNNING;
+    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    bit_offset += conf->proto_identi.thread_num;
+
+    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_start = bit_offset;
+    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_end = bit_offset + conf->rule_match.thread_num;
+    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_num = conf->rule_match.thread_num;
+    ctrl->modules[MODULES_RULE_MATCH].status.running = RUNNING;
+    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    bit_offset += conf->rule_match.thread_num;
+
+    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_start = bit_offset;
+    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_end = bit_offset + conf->flow_iotonic.thread_num;
+    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_num = conf->flow_iotonic.thread_num;
+    ctrl->modules[MODULES_FLOW_ISOTONIC].status.running = RUNNING;
+    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    bit_offset += conf->flow_iotonic.thread_num;
+
+    printf("lcore mask = %x\n", ctrl->lcores.lcore_mask);
+
+    return DAPP_OK;
+}
 
 static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
 {
@@ -31,116 +105,118 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
         return DAPP_ERR_PARAM;
     }
 
+    struct option long_options[] = {
+        {"config",      1,  0,  's'},
+        {"rule",        1,  0,  'r'},
+        {"help",        0,  0,  'h'},
+        {0,             0,  0,  0}
+    };
+
     int opt = 0;
+    STATUS ret = DAPP_OK;
+    char conf_file[CONF_FILE_NAME_SIZE] = {0};
+    char rule_file[CONF_FILE_NAME_SIZE] = {0};
 
     /*
      * Set default parameters
      */
-    snprintf(ctrl->static_conf_file, sizeof(ctrl->static_conf_file), "%s", STATIC_CONF_FILE);
-    snprintf(ctrl->dynamic_conf_file, sizeof(ctrl->dynamic_conf_file), "%s", DYNAMIC_CONF_FILE);
+    snprintf(conf_file, sizeof(conf_file), "%s", CONF_FILE);
+    snprintf(rule_file, sizeof(rule_file), "%s", RULE_FILE);
 
     /*
      * Parse command line parameters
      */
-    while (-1 != (opt = getopt_long(argc, argv, "s:d:h", long_options, NULL))) {
+    while (-1 != (opt = getopt_long(argc, argv, "c:r:h", long_options, NULL))) {
         switch (opt) {
-            case 's' :
-                snprintf(ctrl->static_conf_file, sizeof(ctrl->static_conf_file), "%s", optarg);
+            case 'c' :
+                snprintf(conf_file, sizeof(conf_file), "%s", optarg);
                 break;
-            case 'd' :
-                snprintf(ctrl->dynamic_conf_file, sizeof(ctrl->dynamic_conf_file), "%s", optarg);
+            case 'r' :
+                snprintf(rule_file, sizeof(rule_file), "%s", optarg);
                 break;
             case 'h' :
                 printf("%s OPTIONS :\n"
-                       "    -s, --static, set static configuration file\n"
-                       "    -d, --dynamic, set dynamic configuration file\n"
-                       "    -h, --help, show optoins\n", argv[0]);
+                       "    -c, --config, set startup configuration file\n"
+                       "    -r, --rule,   set rule configuration file\n"
+                       "    -h, --help,   show optoins\n", argv[0]);
                 break;
             default :
                 printf("invalid optoin!\n");
                 printf("%s OPTIONS :\n"
-                       "    -s, --static, set static configuration file\n"
-                       "    -d, --dynamic, set dynamic configuration file\n"
-                       "    -h, --help, show optoins\n", argv[0]);
+                       "    -c, --config, set startup configuration file\n"
+                       "    -r, --rule,   set rule configuration file\n"
+                       "    -h, --help,   show optoins\n", argv[0]);
                 return DAPP_ERR_OPTION;
         }
     }
 
+    dapp_conf_t conf;
+    memset(&conf, 0, sizeof(conf));
+    
+    /*
+     * resolve startup configuration
+     */
+    if (DAPP_OK != (ret = dapp_conf_parse(&conf, conf_file))) {
+        printf("dapp conf parse fail\n");
+        return ret;
+    }
+
+    /*
+     * debug, show static configuration
+     */
+    dapp_conf_dump(&conf);
+
+    /*
+     * Initialize Console
+     */
+    ctrl->program = argv[0];
+    if (DAPP_OK != (ret = dapp_ctrl_init(&conf, ctrl))) {
+        printf("dapp ctrl init failed\n");
+        return ret;
+    }
+
     return DAPP_OK;
 }
 
-static dapp_dpdk_args_alloc_set(dpdk_eal_args_t *dpdk_eal_args, char *arg)
+static char eal_args[DPDK_ARG_NUM][DPDK_ARG_SIZE];
+
+int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
 {
-    if (!dpdk_eal_args || !arg) {
+    if (!argc || !argv || !arg) {
         return DAPP_ERR_PARAM;
     }
 
-    if (dpdk_eal_args->argc >= ITEM(dpdk_eal_args->argv))
-    {
-        return DAPP_ERR_EAL_PARAM;
-    }
+    int narg = 0;
+    dapp_ctrl_t *ctrl = arg;
 
-    dpdk_eal_args->argv[dpdk_eal_args->argc] = (char *)malloc(DPDK_EAL_ARGV_SIZE);
-    assert(NULL != dpdk_eal_args->argv[dpdk_eal_args->argc]);
-    snprintf(dpdk_eal_args->argv[dpdk_eal_args->argc], DPDK_EAL_ARGV_SIZE, "%s", arg);
-    dpdk_eal_args->argc++;
-
-    return DAPP_OK;
-}
-
-static STATUS dapp_dpdk_args_init(char *first, dapp_static_conf_t *static_conf, dpdk_eal_args_t **dpdk_eal_args)
-{
-    if (!first || !static_conf) {
-        return DAPP_ERR_PARAM;
-    }
-
-    (*dpdk_eal_args) = (dpdk_eal_args_t *)malloc(sizeof(dpdk_eal_args_t));
-    assert(NULL != (*dpdk_eal_args));
-    memset((*dpdk_eal_args), 0, sizeof(dpdk_eal_args_t));
+    /* program */
+    argv[narg] = eal_args[narg];
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ctrl->program);
 
     /*
-     * first arg
+     * lcore
      */
-    dapp_dpdk_args_alloc_set(*dpdk_eal_args, first);
+    argv[narg] = eal_args[narg];
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "-c%x", ctrl->lcores.lcore_mask);
 
-    char cmd[DPDK_EAL_ARGV_SIZE];
+    *argc = narg;
 
     /*
-     * arg lcore mask
+     * debug
      */
-    int thread_num = 1;
-    uint64_t lcore_mask = 7;
-    thread_num += static_conf->port.thread_num;
-    thread_num += static_conf->flow_iotonic.thread_num;
-    thread_num += static_conf->proto_identi.thread_num;
-    thread_num += static_conf->rule_match.thread_num;
-    
-    snprintf(cmd, sizeof(cmd), "-c%lu", lcore_mask);
-    dapp_dpdk_args_alloc_set(*dpdk_eal_args, cmd);
-    
-    return DAPP_OK;
-}
-
-static void dapp_dpdk_args_exit(dpdk_eal_args_t *dpdk_eal_args)
-{
     int i = 0;
-
-    if (dpdk_eal_args) {
-        for (i = 1; i < dpdk_eal_args->argc; ++i) {
-            if (dpdk_eal_args->argv[i]) {
-                free(dpdk_eal_args->argv[i]);
-            }
-        }
-
-        free(dpdk_eal_args);
+    for (i = 0; i < *argc; ++i) {
+        DAPP_TRACE("argv[%d] = %s\n", i, argv[i]);
     }
+    
+    return 0;
 }
 
 static int dapp_business_loop(__attribute__((unused)) void *arg)
 {
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
-    printf("dapp_business_loop lcore(%u)\n", lcore_id);
+    printf("dapp business loop lcore(%u)\n", lcore_id);
     return 0;
 }
 
@@ -148,57 +224,30 @@ static int dapp_control_loop(__attribute__((unused)) void *arg)
 {
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
-    printf("dapp_control_loop lcore(%u)\n", lcore_id);
+    printf("dapp control loop lcore(%u)\n", lcore_id);
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    dapp_ctrl_t dapp_ctrl;
-    memset(&dapp_ctrl, 0, sizeof(dapp_ctrl));
-
-    dapp_static_conf_t static_conf;
-    memset(&static_conf, 0, sizeof(static_conf));
-
     STATUS ret = DAPP_OK;
+
+    dapp_ctrl_t ctrl;
+    memset(&ctrl, 0, sizeof(ctrl));
 
     /*
      * Parse command line parameters
      */
-    if (DAPP_OK != (ret = dapp_args_parse(argc, argv, &dapp_ctrl))) {
-        printf("dapp_args_parse fail\n");
+    if (DAPP_OK != (ret = dapp_args_parse(argc, argv, &ctrl))) {
+        printf("dapp args parse fail\n");
         return ret;
     }
-
-    /*
-     * resolve static configuration
-     */
-    if (DAPP_OK != (ret = dapp_static_conf_parse(&static_conf, dapp_ctrl.static_conf_file))) {
-        printf("dapp_static_conf_parse fail\n");
-        return ret;
-    }
-
-    /*
-     * debug, show static configuration
-     */
-    dapp_static_conf_dump(&static_conf);
-
-    dpdk_eal_args_t *dpdk_eal_args = NULL;
-    /*
-     * set dpdk eal init args
-     */
-    if (DAPP_OK != (ret = dapp_dpdk_args_init(argv[0], &static_conf, &dpdk_eal_args))) {
-        printf("dapp_dpdk_args_init fail\n");
-        return ret;
-    }
-    
-    dpdk_init(dpdk_eal_args);
+        
+    dpdk_init(&ctrl, dpdk_args_parse_callback);
 
     dpdk_run(dapp_business_loop, NULL, dapp_control_loop, NULL);
 
     dpdk_exit();
-
-    dapp_dpdk_args_exit(dpdk_eal_args);
 
     return DAPP_OK;
 }

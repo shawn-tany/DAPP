@@ -3,9 +3,9 @@
 #include "jansson.h"
 #include "config.h"
 
-static STATUS dapp_static_conf_port_obj_parse(dapp_static_conf_t *static_conf, json_t *port)
+static STATUS dapp_port_conf_parse(dapp_conf_t *conf, json_t *port)
 {
-    if (!static_conf || !port) {
+    if (!conf || !port) {
         return DAPP_ERR_PARAM;
     }
 
@@ -15,7 +15,7 @@ static STATUS dapp_static_conf_port_obj_parse(dapp_static_conf_t *static_conf, j
     if (!(obj = json_object_get(port, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->port.thread_num = json_integer_value(obj);
+    conf->port.thread_num = json_integer_value(obj);
 
     if (!(obj = json_object_get(port, "mempool"))) {
         return DAPP_ERR_JSON_CONF;
@@ -24,12 +24,12 @@ static STATUS dapp_static_conf_port_obj_parse(dapp_static_conf_t *static_conf, j
     if (!(sub_obj = json_object_get(obj, "node_size"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->port.mempool.node_size = json_integer_value(sub_obj);
+    conf->port.mempool.node_size = json_integer_value(sub_obj);
 
     if (!(sub_obj = json_object_get(obj, "node_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->port.mempool.node_num = json_integer_value(sub_obj);
+    conf->port.mempool.node_num = json_integer_value(sub_obj);
 
     if (!(obj = json_object_get(port, "port_list"))) {
         return DAPP_ERR_JSON_CONF;
@@ -47,16 +47,16 @@ static STATUS dapp_static_conf_port_obj_parse(dapp_static_conf_t *static_conf, j
             return DAPP_ERR_JSON_FMT;
         }
         
-        memcpy(static_conf->port.port_list.port[i], json_string_value(sub_obj), sizeof(static_conf->port.port_list.port[i]));
-        static_conf->port.port_list.port_num++;
+        memcpy(conf->port.port.ports[i], json_string_value(sub_obj), sizeof(conf->port.port.ports[i]));
+        conf->port.port.port_num++;
     }
 
     return DAPP_OK;
 }
 
-static STATUS dapp_static_conf_flow_iotonic_obj_parse(dapp_static_conf_t *static_conf, json_t *flow_iotonic)
+static STATUS dapp_flow_iotonic_conf_parse(dapp_conf_t *conf, json_t *flow_iotonic)
 {
-    if (!static_conf || !flow_iotonic) {
+    if (!conf || !flow_iotonic) {
         return DAPP_ERR_PARAM;
     }
 
@@ -66,7 +66,7 @@ static STATUS dapp_static_conf_flow_iotonic_obj_parse(dapp_static_conf_t *static
     if (!(obj = json_object_get(flow_iotonic, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->flow_iotonic.thread_num = json_integer_value(obj);
+    conf->flow_iotonic.thread_num = json_integer_value(obj);
 
     if (!(obj = json_object_get(flow_iotonic, "mempool"))) {
         return DAPP_ERR_JSON_CONF;
@@ -75,24 +75,24 @@ static STATUS dapp_static_conf_flow_iotonic_obj_parse(dapp_static_conf_t *static
     if (!(sub_obj = json_object_get(obj, "node_size"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->flow_iotonic.mempool.node_size = json_integer_value(sub_obj);
+    conf->flow_iotonic.mempool.node_size = json_integer_value(sub_obj);
 
     if (!(sub_obj = json_object_get(obj, "node_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->flow_iotonic.mempool.node_num = json_integer_value(sub_obj);
+    conf->flow_iotonic.mempool.node_num = json_integer_value(sub_obj);
 
     if (!(obj = json_object_get(flow_iotonic, "window"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->flow_iotonic.window = json_integer_value(obj);
+    conf->flow_iotonic.window = json_integer_value(obj);
 
     return DAPP_OK;
 }
 
-static STATUS dapp_static_conf_proto_identi_obj_parse(dapp_static_conf_t *static_conf, json_t *proto_identi)
+static STATUS dapp_proto_identi_conf_parse(dapp_conf_t *conf, json_t *proto_identi)
 {
-    if (!static_conf || !proto_identi) {
+    if (!conf || !proto_identi) {
         return DAPP_ERR_PARAM;
     }
 
@@ -101,14 +101,14 @@ static STATUS dapp_static_conf_proto_identi_obj_parse(dapp_static_conf_t *static
     if (!(obj = json_object_get(proto_identi, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->proto_identi.thread_num = json_integer_value(obj);
+    conf->proto_identi.thread_num = json_integer_value(obj);
 
     return DAPP_OK;
 }
 
-static STATUS dapp_static_conf_rule_match_obj_parse(dapp_static_conf_t *static_conf, json_t *rule_match)
+static STATUS dapp_rule_match_conf_parse(dapp_conf_t *conf, json_t *rule_match)
 {
-    if (!static_conf || !rule_match) {
+    if (!conf || !rule_match) {
         return DAPP_ERR_PARAM;
     }
 
@@ -117,53 +117,53 @@ static STATUS dapp_static_conf_rule_match_obj_parse(dapp_static_conf_t *static_c
     if (!(obj = json_object_get(rule_match, "thread_num"))) {
         return DAPP_ERR_JSON_CONF;
     }
-    static_conf->rule_match.thread_num = json_integer_value(obj);
+    conf->rule_match.thread_num = json_integer_value(obj);
 
     return DAPP_OK;
 }
 
-static STATUS dapp_static_conf_obj_parse(dapp_static_conf_t *static_conf, json_t *conf)
+static STATUS _dapp_conf_parse(dapp_conf_t *conf, json_t *obj_conf)
 {
-    if (!static_conf || !conf) {
+    if (!conf || !obj_conf) {
         return DAPP_ERR_PARAM;
     }
 
     json_t *obj = NULL;
 
     /* port parse */
-    if (!(obj = json_object_get(conf, "port"))) {
+    if (!(obj = json_object_get(obj_conf, "port"))) {
         return DAPP_ERR_JSON_CONF;
-    } else if (DAPP_OK != (dapp_static_conf_port_obj_parse(static_conf, obj))) {
+    } else if (DAPP_OK != (dapp_port_conf_parse(conf, obj))) {
         return DAPP_ERR_JSON_CONF;
     }
 
     /* flow_iotonic parse */
-    if (!(obj = json_object_get(conf, "flow_iotonic"))) {
+    if (!(obj = json_object_get(obj_conf, "flow_iotonic"))) {
         return DAPP_ERR_JSON_CONF;
-    } else if (DAPP_OK != (dapp_static_conf_flow_iotonic_obj_parse(static_conf, obj))) {
+    } else if (DAPP_OK != (dapp_flow_iotonic_conf_parse(conf, obj))) {
         return DAPP_ERR_JSON_CONF;
     }
 
     /* proto_identi parse */
-    if (!(obj = json_object_get(conf, "proto_identi"))) {
+    if (!(obj = json_object_get(obj_conf, "proto_identi"))) {
         return DAPP_ERR_JSON_CONF;
-    } else if (DAPP_OK != (dapp_static_conf_proto_identi_obj_parse(static_conf, obj))) {
+    } else if (DAPP_OK != (dapp_proto_identi_conf_parse(conf, obj))) {
         return DAPP_ERR_JSON_CONF;
     }
 
     /* rule_match parse */
-    if (!(obj = json_object_get(conf, "rule_match"))) {
+    if (!(obj = json_object_get(obj_conf, "rule_match"))) {
         return DAPP_ERR_JSON_CONF;
-    } else if (DAPP_OK != (dapp_static_conf_rule_match_obj_parse(static_conf, obj))) {
+    } else if (DAPP_OK != (dapp_rule_match_conf_parse(conf, obj))) {
         return DAPP_ERR_JSON_CONF;
     }
 
     return DAPP_OK;
 }
 
-STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_name)
+STATUS dapp_conf_parse(dapp_conf_t *conf, const char *file_name)
 {
-    if (!static_conf || !file_name) {
+    if (!conf || !file_name) {
         return DAPP_ERR_PARAM;
     }
 
@@ -203,7 +203,7 @@ STATUS dapp_static_conf_parse(dapp_static_conf_t *static_conf, const char *file_
         /*
          * Get the configuration through the json object
          */
-        if (DAPP_OK != (ret = dapp_static_conf_obj_parse(static_conf, conf_obj))) {
+        if (DAPP_OK != (ret = _dapp_conf_parse(conf, conf_obj))) {
             goto STATIC_CONF_FAIL;
         }
     }
@@ -216,9 +216,9 @@ STATIC_CONF_FAIL:
     return ret;
 }
 
-void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
+void dapp_conf_dump(dapp_conf_t *conf)
 {
-    if (static_conf) {
+    if (conf) {
         printf("##\n"
                "static config :\n"
                "    port config :\n"
@@ -227,12 +227,12 @@ void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
                "            node size = %d\n" 
                "            node num = %d\n" 
                "        port list:\n", 
-               static_conf->port.thread_num, 
-               static_conf->port.mempool.node_size , 
-               static_conf->port.mempool.node_num);
+               conf->port.thread_num, 
+               conf->port.mempool.node_size , 
+               conf->port.mempool.node_num);
         int i = 0;
-        for (i = 0; i < static_conf->port.port_list.port_num; ++i) {
-        printf("            %s\n", static_conf->port.port_list.port[i]);
+        for (i = 0; i < conf->port.port.port_num; ++i) {
+        printf("            %s\n", conf->port.port.ports[i]);
         }
         printf("\n");
         printf("    flow_iotonic config :\n"
@@ -241,27 +241,19 @@ void dapp_static_conf_dump(dapp_static_conf_t *static_conf)
                "            node size = %d\n" 
                "            node num = %d\n" 
                "        window = %d\n", 
-               static_conf->flow_iotonic.thread_num, 
-               static_conf->flow_iotonic.mempool.node_size, 
-               static_conf->flow_iotonic.mempool.node_num, 
-               static_conf->flow_iotonic.window);
+               conf->flow_iotonic.thread_num, 
+               conf->flow_iotonic.mempool.node_size, 
+               conf->flow_iotonic.mempool.node_num, 
+               conf->flow_iotonic.window);
         printf("\n");
         printf("    proto_identi config :\n"
                "        thread num = %d\n", 
-               static_conf->proto_identi.thread_num);
+               conf->proto_identi.thread_num);
         printf("\n");
         printf("    rule_match config :\n"
                "        thread num = %d\n"
                "##\n",
-               static_conf->rule_match.thread_num);
+               conf->rule_match.thread_num);
     }
 }
 
-STATUS dapp_dynamic_conf_parse(dapp_dynamic_conf_t *dynamic_conf, const char *file_name)
-{
-    if (!dynamic_conf || !file_name) {
-        return DAPP_ERR_PARAM;
-    }
-
-    return DAPP_OK;
-}
