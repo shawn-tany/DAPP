@@ -8,6 +8,7 @@
 #include "config.h"
 #include "dpdk.h"
 #include "dapp_code.h"
+#include "modules.h"
 
 #define CONF_FILE "../install/config/startup.conf"
 #define RULE_FILE "../install/config/rule.conf"
@@ -16,18 +17,6 @@
 
 #define RUNNING (1)
 #define EXIT    (0)
-
-enum 
-{
-    MODULES_CTRL = 0,
-    MODULES_PORT_TRANS,
-    MODULES_PROTO_IDENTI,
-    MODULES_RULE_MATCH,
-    MODULES_FLOW_ISOTONIC,
-    MODULES_DATA_RESTORE,
-    MODULES_FILE_IDENTI,
-    MODULES_TYPE_NUM,
-};
 
 typedef struct {
     char *program;
@@ -216,15 +205,9 @@ static int dapp_business_loop(__attribute__((unused)) void *arg)
 {
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
-    printf("dapp business loop lcore(%u)\n", lcore_id);
-    return 0;
-}
 
-static int dapp_control_loop(__attribute__((unused)) void *arg)
-{
-    unsigned lcore_id;
-    lcore_id = dpdk_lcore_id();
-    printf("dapp control loop lcore(%u)\n", lcore_id);
+    printf("dapp loop lcore(%u)\n", lcore_id);
+    
     return 0;
 }
 
@@ -242,10 +225,10 @@ int main(int argc, char *argv[])
         printf("dapp args parse fail\n");
         return ret;
     }
-        
+    
     dpdk_init(&ctrl, dpdk_args_parse_callback);
 
-    dpdk_run(dapp_business_loop, NULL, dapp_control_loop, NULL);
+    dpdk_run(dapp_business_loop, NULL);
 
     dpdk_exit();
 

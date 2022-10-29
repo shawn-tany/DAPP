@@ -10,7 +10,7 @@ unsigned dpdk_lcore_id(void);
 
 int dpdk_init(void *arg, eal_args_parse_callback args_parse);
 
-int dpdk_run(int (*slave_loop)(void *), void *slave_arg, int (*master_loop)(void *), void *master_arg);
+int dpdk_run(int (*loop)(void *), void *arg);
 
 void dpdk_exit(void);
 

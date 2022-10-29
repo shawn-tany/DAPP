@@ -17,6 +17,7 @@ BUILD_DIR = ../build
 
 # all source are stored in SRCS
 SRCS = main.c 
+SRCS += $(COMMON_DIR)/modules.c
 SRCS += $(CONFIG_DIR)/config.c
 SRCS += $(DPDK_API_DIR)/dpdk.c
 
