@@ -35,6 +35,6 @@ typedef enum
     #define DAPP_TRACE(format, ...) do { } while(0)
 #endif
 
-#define ITEM(a) (sizeof(a) / sizeof(a[0]))
+#define ITEM(a) (sizeof(a) / sizeof((a)[0]))
 
 #endif

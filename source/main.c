@@ -15,8 +15,8 @@
 
 #define CONF_FILE_NAME_SIZE (256)
 
-#define RUNNING (1)
-#define EXIT    (0)
+#define TRUE    (1)
+#define FALSE   (0)
 
 typedef struct {
     char *program;
@@ -33,64 +33,60 @@ typedef struct {
         } lcore;
 
         struct {
+            uint8_t reg;
             uint8_t running;
         } status;
         
     } modules[MODULES_TYPE_NUM];
     
-} dapp_ctrl_t;
+} dapp_workspace_t;
 
-static STATUS dapp_ctrl_init(dapp_conf_t *conf, dapp_ctrl_t *ctrl)
+static void dapp_ws_lcore_set(dapp_workspace_t *ws, dapp_modules_type_t type, uint64_t lstart, uint8_t lnum)
+{
+    int i = 0;
+
+    ws->modules[type].lcore.lcore_start = lstart;
+    ws->modules[type].lcore.lcore_end = lstart + lnum - 1;
+    ws->modules[type].lcore.lcore_num = lnum;
+
+    ws->modules[type].status.reg = TRUE;
+    ws->modules[type].status.running = TRUE;
+
+    for (i = 0; i < lnum; ++i) {
+        DAPP_MASK_SET(ws->lcores.lcore_mask, lstart + i);
+    }
+}
+
+static STATUS dapp_workspace_init(dapp_conf_t *conf, dapp_workspace_t *ws)
 {
     uint64_t bit_offset = 0;
-    uint64_t module_mask = 0;
 
     /*
      * lcore
      */
-    ctrl->modules[MODULES_CTRL].lcore.lcore_start = 0;
-    ctrl->modules[MODULES_CTRL].lcore.lcore_end = 0;
-    ctrl->modules[MODULES_CTRL].lcore.lcore_num = 1;
-    ctrl->modules[MODULES_CTRL].status.running = RUNNING;
-    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    dapp_ws_lcore_set(ws, MODULES_CTRL, bit_offset, 1);
     bit_offset += 1;
-    
-    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_start = bit_offset;
-    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_end = bit_offset + conf->port.thread_num;
-    ctrl->modules[MODULES_PORT_TRANS].lcore.lcore_num = conf->port.thread_num;
-    ctrl->modules[MODULES_PORT_TRANS].status.running = RUNNING;
-    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+
+    dapp_ws_lcore_set(ws, MODULES_PORT_TRANS, bit_offset, conf->port.thread_num);
     bit_offset += conf->port.thread_num;
 
-    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_start = bit_offset;
-    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_end = bit_offset + conf->proto_identi.thread_num;
-    ctrl->modules[MODULES_PROTO_IDENTI].lcore.lcore_num = conf->proto_identi.thread_num;
-    ctrl->modules[MODULES_PROTO_IDENTI].status.running = RUNNING;
-    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    dapp_ws_lcore_set(ws, MODULES_PROTO_IDENTI, bit_offset, conf->proto_identi.thread_num);
     bit_offset += conf->proto_identi.thread_num;
 
-    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_start = bit_offset;
-    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_end = bit_offset + conf->rule_match.thread_num;
-    ctrl->modules[MODULES_RULE_MATCH].lcore.lcore_num = conf->rule_match.thread_num;
-    ctrl->modules[MODULES_RULE_MATCH].status.running = RUNNING;
-    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    dapp_ws_lcore_set(ws, MODULES_RULE_MATCH, bit_offset, conf->rule_match.thread_num);
     bit_offset += conf->rule_match.thread_num;
 
-    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_start = bit_offset;
-    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_end = bit_offset + conf->flow_iotonic.thread_num;
-    ctrl->modules[MODULES_FLOW_ISOTONIC].lcore.lcore_num = conf->flow_iotonic.thread_num;
-    ctrl->modules[MODULES_FLOW_ISOTONIC].status.running = RUNNING;
-    DAPP_MASK_SET(ctrl->lcores.lcore_mask, bit_offset);
+    dapp_ws_lcore_set(ws, MODULES_FLOW_ISOTONIC, bit_offset, conf->flow_iotonic.thread_num);
     bit_offset += conf->flow_iotonic.thread_num;
 
-    printf("lcore mask = %x\n", ctrl->lcores.lcore_mask);
+    printf("lcore mask = %x\n", ws->lcores.lcore_mask);
 
     return DAPP_OK;
 }
 
-static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
+static STATUS dapp_args_parse(int argc, char *argv[], dapp_workspace_t *ws)
 {
-    if (!argv || !ctrl) {
+    if (!argv || !ws) {
         return DAPP_ERR_PARAM;
     }
 
@@ -158,9 +154,9 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_ctrl_t *ctrl)
     /*
      * Initialize Console
      */
-    ctrl->program = argv[0];
-    if (DAPP_OK != (ret = dapp_ctrl_init(&conf, ctrl))) {
-        printf("dapp ctrl init failed\n");
+    ws->program = argv[0];
+    if (DAPP_OK != (ret = dapp_workspace_init(&conf, ws))) {
+        printf("dapp workspace init failed\n");
         return ret;
     }
 
@@ -176,17 +172,17 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
     }
 
     int narg = 0;
-    dapp_ctrl_t *ctrl = arg;
+    dapp_workspace_t *ws = arg;
 
     /* program */
     argv[narg] = eal_args[narg];
-    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ctrl->program);
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ws->program);
 
     /*
      * lcore
      */
     argv[narg] = eal_args[narg];
-    snprintf(argv[narg++], DPDK_ARG_SIZE, "-c%x", ctrl->lcores.lcore_mask);
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "-c%x", ws->lcores.lcore_mask);
 
     *argc = narg;
 
@@ -201,12 +197,23 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
     return 0;
 }
 
-static int dapp_business_loop(__attribute__((unused)) void *arg)
+static int dapp_loop(__attribute__((unused)) void *arg)
 {
+    int i = 0;
+
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
 
-    printf("dapp loop lcore(%u)\n", lcore_id);
+    dapp_workspace_t *ws = arg;
+
+    for (i = 0; i < ITEM(ws->modules); ++i) {
+        if (ws->modules[i].status.reg &&
+            lcore_id >= ws->modules[i].lcore.lcore_start &&
+            lcore_id <= ws->modules[i].lcore.lcore_end) {
+
+            printf("dapp loop lcore(%u) modules : %s\n", lcore_id, dapp_modules_name_get(i));
+        }
+    }
     
     return 0;
 }
@@ -215,20 +222,20 @@ int main(int argc, char *argv[])
 {
     STATUS ret = DAPP_OK;
 
-    dapp_ctrl_t ctrl;
-    memset(&ctrl, 0, sizeof(ctrl));
+    dapp_workspace_t ws;
+    memset(&ws, 0, sizeof(ws));
 
     /*
      * Parse command line parameters
      */
-    if (DAPP_OK != (ret = dapp_args_parse(argc, argv, &ctrl))) {
+    if (DAPP_OK != (ret = dapp_args_parse(argc, argv, &ws))) {
         printf("dapp args parse fail\n");
         return ret;
     }
     
-    dpdk_init(&ctrl, dpdk_args_parse_callback);
+    dpdk_init(&ws, dpdk_args_parse_callback);
 
-    dpdk_run(dapp_business_loop, NULL);
+    dpdk_run(dapp_loop, &ws);
 
     dpdk_exit();
 
