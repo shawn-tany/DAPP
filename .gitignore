@@ -1,2 +1,4 @@
 SDK
 build
+package/bin
+package/*.tar.gz

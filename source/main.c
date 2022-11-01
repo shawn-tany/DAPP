@@ -10,8 +10,8 @@
 #include "dapp_code.h"
 #include "modules.h"
 
-#define CONF_FILE "../install/config/startup.conf"
-#define RULE_FILE "../install/config/rule.conf"
+#define CONF_FILE "/etc/DAPP/config/startup.conf"
+#define RULE_FILE "/etc/DAPP/config/rule.conf"
 
 #define CONF_FILE_NAME_SIZE (256)
 
@@ -177,6 +177,12 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
     /* program */
     argv[narg] = eal_args[narg];
     snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ws->program);
+
+    /*
+     * master process
+     */
+    argv[narg] = eal_args[narg];
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", "--proc-type=primary");
 
     /*
      * lcore
