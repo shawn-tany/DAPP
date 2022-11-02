@@ -18,28 +18,12 @@
 #define TRUE    (1)
 #define FALSE   (0)
 
-typedef struct {
-    char *program;
+typedef struct 
+{
+    char program[128];
+    dapp_conf_t conf;
 
-    struct {
-        uint64_t lcore_mask;
-    } lcores;
-
-    struct {
-        struct {
-            uint8_t lcore_start;
-            uint8_t lcore_end;
-            uint8_t lcore_num;
-        } lcore;
-
-        struct {
-            uint8_t reg;
-            uint8_t running;
-        } status;
-        
-    } modules[MODULES_TYPE_NUM];
-    
-} dapp_workspace_t;
+} dapp_context_t;
 
 static void dapp_ws_lcore_set(dapp_workspace_t *ws, dapp_modules_type_t type, uint64_t lstart, uint8_t lnum)
 {
@@ -64,7 +48,7 @@ static STATUS dapp_workspace_init(dapp_conf_t *conf, dapp_workspace_t *ws)
     /*
      * lcore
      */
-    dapp_ws_lcore_set(ws, MODULES_CTRL, bit_offset, 1);
+    dapp_ws_lcore_set(ws, DAPP_MODULES_CTRL, bit_offset, 1);
     bit_offset += 1;
 
     dapp_ws_lcore_set(ws, MODULES_PORT_TRANS, bit_offset, conf->port.thread_num);
@@ -84,9 +68,9 @@ static STATUS dapp_workspace_init(dapp_conf_t *conf, dapp_workspace_t *ws)
     return DAPP_OK;
 }
 
-static STATUS dapp_args_parse(int argc, char *argv[], dapp_workspace_t *ws)
+static STATUS dapp_context_init(int *argc, char **argv, dapp_context_t *context)
 {
-    if (!argv || !ws) {
+    if (!argc || !argv || !context) {
         return DAPP_ERR_PARAM;
     }
 
@@ -111,7 +95,7 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_workspace_t *ws)
     /*
      * Parse command line parameters
      */
-    while (-1 != (opt = getopt_long(argc, argv, "c:r:h", long_options, NULL))) {
+    while (-1 != (opt = getopt_long(*argc, argv, "c:r:h", long_options, NULL))) {
         switch (opt) {
             case 'c' :
                 snprintf(conf_file, sizeof(conf_file), "%s", optarg);
@@ -135,13 +119,15 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_workspace_t *ws)
         }
     }
 
-    dapp_conf_t conf;
-    memset(&conf, 0, sizeof(conf));
+    /*
+     * program 
+     */
+    snprintf(context->program, sizeof(context->program), "%s", argv[0]);
     
     /*
      * resolve startup configuration
      */
-    if (DAPP_OK != (ret = dapp_conf_parse(&conf, conf_file))) {
+    if (DAPP_OK != (ret = dapp_conf_parse(&context->conf, conf_file))) {
         printf("dapp conf parse fail\n");
         return ret;
     }
@@ -149,16 +135,7 @@ static STATUS dapp_args_parse(int argc, char *argv[], dapp_workspace_t *ws)
     /*
      * debug, show static configuration
      */
-    dapp_conf_dump(&conf);
-
-    /*
-     * Initialize Console
-     */
-    ws->program = argv[0];
-    if (DAPP_OK != (ret = dapp_workspace_init(&conf, ws))) {
-        printf("dapp workspace init failed\n");
-        return ret;
-    }
+    dapp_conf_dump(&context->conf);
 
     return DAPP_OK;
 }
@@ -172,11 +149,11 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
     }
 
     int narg = 0;
-    dapp_workspace_t *ws = arg;
+    dapp_context_t *ctx = arg;
 
     /* program */
     argv[narg] = eal_args[narg];
-    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ws->program);
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "%s", ctx->program);
 
     /*
      * master process
@@ -228,20 +205,20 @@ int main(int argc, char *argv[])
 {
     STATUS ret = DAPP_OK;
 
-    dapp_workspace_t ws;
-    memset(&ws, 0, sizeof(ws));
+    dapp_context_t context;
+    memset(&context, 0, sizeof(context));
 
     /*
      * Parse command line parameters
      */
-    if (DAPP_OK != (ret = dapp_args_parse(argc, argv, &ws))) {
+    if (DAPP_OK != (ret = dapp_context_init(argc, argv, &context))) {
         printf("dapp args parse fail\n");
         return ret;
     }
     
-    dpdk_init(&ws, dpdk_args_parse_callback);
+    dpdk_init(&context, dpdk_args_parse_callback);
 
-    dpdk_run(dapp_loop, &ws);
+    dpdk_run(dapp_loop, NULL);
 
     dpdk_exit();
 

@@ -27,6 +27,7 @@ typedef enum
     DAPP_ERR_JSON_FMT,
     DAPP_ERR_JSON_CONF,
     DAPP_ERR_EAL_PARAM,
+    DAPP_ERR_MODL_TYPE,
 } STATUS;
 
 #ifdef DAPP_DEBUG

@@ -17,13 +17,13 @@ SRCS = $(SOURCE_DIR)/main.c
 # all library are stored in SRCS
 
 CFLAGS += -g
-CFLAGS += -D DAPP_DEBUG
+CFLAGS += -D DAPP_DEBUG=1
 CFLAGS += -O0
 
 ALL :
 	@echo " make DAPP"
 	@# create directory
-	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
+	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
 	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
 	
 	@# compile
