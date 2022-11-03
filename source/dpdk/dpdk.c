@@ -29,11 +29,11 @@ int dpdk_init(void *arg, eal_args_parse_callback args_parse)
     return 0;
 }
 
-int dpdk_run(int (*loop)(void *), void *arg)
+int dpdk_run(int (*work)(void *), void *arg)
 {
     unsigned lcore_id;
 
-    if (!loop) {
+    if (!work) {
         return -1;
     }
 
@@ -41,13 +41,13 @@ int dpdk_run(int (*loop)(void *), void *arg)
      * call slave_loop() on every slave lcore
      */
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-        rte_eal_remote_launch(loop, arg, lcore_id);
+        rte_eal_remote_launch(work, arg, lcore_id);
     }
 
     /* 
      * call it on master lcore too
      */
-    loop(arg);
+    work(arg);
     
     return 0;
 }

@@ -1,17 +1,49 @@
+#include <stdio.h>
 #include "modules.h"
 #include "dapp_code.h"
 
-static dapp_modules_t MODULES;
+static dapp_modules_table_t MODULES;
 
 char *dapp_module_name_get(dapp_modules_type_t type)
 {
     int i = 0;
 
-    if (DAPP_MODULES_TYPE_NUM <= type) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         return "unknow";
     }
 
     return MODULES.module[type].reg.name;
+}
+
+uint64_t dapp_modules_total_lcore_mask_get(void)
+{
+    return MODULES.lcore_mask;
+}
+
+uint64_t dapp_module_lcore_mask_get(dapp_modules_type_t type)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return 0;
+    }
+
+    return MODULES.module[type].lcore.lcore_mask;
+}
+
+dapp_module_t *dapp_module_get_by_lcore(uint64_t lcore)
+{
+    int i = 0;
+    uint64_t t;
+
+    for (i = 0; i < MODULES_ITEM(MODULES.module); ++i) {
+
+        DAPP_MASK_TST(MODULES.module[i].lcore.lcore_mask, lcore, t);
+    
+        if (t) {
+            return &MODULES.module[i];
+        }
+    }
+
+    return NULL;
 }
 
 void dapp_module_reg(dapp_modules_type_t type, 
@@ -20,14 +52,14 @@ void dapp_module_reg(dapp_modules_type_t type,
                          dapp_module_exec exec, 
                          dapp_module_exit exit)
 {
-    if (DAPP_MODULES_TYPE_NUM <= type) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
     }
 
     /*
      * initialize basic information of module
      */
-    MODULES.module[type].reg.name = name;
+    snprintf(MODULES.module[type].reg.name, sizeof(MODULES.module[type].reg.name), "%s", name);
     MODULES.module[type].reg.init = init;
     MODULES.module[type].reg.exec = exec;
     MODULES.module[type].reg.exit = exit;
@@ -40,7 +72,7 @@ void dapp_module_reg(dapp_modules_type_t type,
 
 void dapp_module_unreg(dapp_modules_type_t type)
 {
-    if (DAPP_MODULES_TYPE_NUM <= type) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
     }
 
@@ -52,7 +84,7 @@ void dapp_module_unreg(dapp_modules_type_t type)
 
 void dapp_module_lcore_init(dapp_modules_type_t type, uint16_t lcore_num)
 {
-    if (DAPP_MODULES_TYPE_NUM <= type) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
     }
 
@@ -80,7 +112,7 @@ void dapp_module_lcore_init(dapp_modules_type_t type, uint16_t lcore_num)
 
 void dapp_module_lcore_uninit(dapp_modules_type_t type)
 {
-    if (DAPP_MODULES_TYPE_NUM <= type) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
     }
 
@@ -88,30 +120,4 @@ void dapp_module_lcore_uninit(dapp_modules_type_t type)
      * Cancel module running flag
      */
     MODULES.module[type].lcore.running = 0;
-}
-
-void dapp_module_ws_init(dapp_modules_type_t type, void *data, uint32_t size)
-{
-    if (DAPP_MODULES_TYPE_NUM <= type) {
-        return ;
-    }
-
-    /*
-     * Add module workspace data
-     */
-    MODULES.module[type].ws.work_data = data;
-    MODULES.module[type].ws.work_size = size;
-}
-
-void dapp_module_ws_uninit(dapp_modules_type_t type)
-{
-    if (DAPP_MODULES_TYPE_NUM <= type) {
-        return ;
-    }
-
-    /*
-     * Delete module workspace data
-     */
-    MODULES.module[type].ws.work_data = NULL;
-    MODULES.module[type].ws.work_size = 0;
 }

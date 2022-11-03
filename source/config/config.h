@@ -31,15 +31,15 @@ typedef struct
         uint8_t thread_num;
         dapp_mempool_conf_t mempool;
         uint32_t window;
-    } flow_iotonic;
+    } flows;
 
     struct {
         uint8_t thread_num;
-    } rule_match;
+    } rule;
 
     struct {
         uint8_t thread_num;
-    } proto_identi;
+    } protocol;
 } dapp_conf_t;
 
 /*

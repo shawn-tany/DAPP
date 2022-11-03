@@ -16,14 +16,6 @@ int dapp_control_exit(void *arg)
     return DAPP_OK;
 }
 
-static dapp_module_t control_modules = {
-    .reg.name = "control";
+DAPP_MODULE_REG_CONSTRUCTOR(DAPP_MODULE_CONTROL, "contorl", dapp_control_init, dapp_control_exec, dapp_control_exit);
 
-    .reg.init = dapp_control_init;
-    .reg.exec = dapp_control_exec;
-    .reg.exit = dapp_control_exit;
-};
-
-__attribute__((constructor)) dapp_module_reg(DAPP_MODULES_CTRL, &control_modules);
-
-__attribute__((destructor)) dapp_module_unreg(DAPP_MODULES_CTRL);
+DAPP_MODULE_UNREG_DESTRUCTOR(DAPP_MODULE_CONTROL, "contorl");
