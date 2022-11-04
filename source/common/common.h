@@ -1,12 +1,12 @@
 #ifndef DAPP_COMMON
 #define DAPP_COMMON
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
+typedef unsigned char UINT8_T;
+typedef unsigned short UINT16_T;
+typedef unsigned int UINT32_T;
+typedef unsigned long long UINT64_T;
 
-typedef uint8_t bool;
+typedef UINT8_T bool;
 
 #ifndef TRUE
     #define TRUE (1)

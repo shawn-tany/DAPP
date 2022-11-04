@@ -28,8 +28,8 @@ typedef struct
 {
     /* Module Registration */
     struct {
-        uint8_t reg : 1;
-        uint8_t var : 7;
+        UINT8_T reg : 1;
+        UINT8_T var : 7;
         char name[MODULES_NAME_SIZE];
         dapp_module_init init;
         dapp_module_exec exec;
@@ -38,16 +38,16 @@ typedef struct
 
     /* Usage of module lcore */
     struct {
-        uint8_t running : 1;
-        uint8_t var : 7;
-        uint64_t lcore_mask;
+        UINT8_T running : 1;
+        UINT8_T var : 7;
+        UINT64_T lcore_mask;
     } lcore;
 
     /* Module Workspace */
     struct 
     {
         void *work_data;
-        uint32_t work_size;
+        UINT32_T work_size;
     } ws;
 } __attribute((__packed__)) dapp_module_t;
 
@@ -55,17 +55,17 @@ typedef struct
 {
     dapp_module_t module[DAPP_MODULE_TYPE_NUM];
 
-    uint64_t lcore_mask;
-    uint8_t lcore_num;
+    UINT64_T lcore_mask;
+    UINT8_T lcore_num;
 } __attribute((__packed__)) dapp_modules_table_t;
 
 char *dapp_modules_name_get(dapp_modules_type_t type);
 
-uint64_t dapp_module_lcore_mask_get(dapp_modules_type_t type);
+UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type);
 
-uint64_t dapp_modules_total_lcore_mask_get(void);
+UINT64_T dapp_modules_total_lcore_mask_get(void);
 
-dapp_module_t *dapp_module_get_by_lcore(uint64_t lcore);
+dapp_module_t *dapp_module_get_by_lcore(UINT64_T lcore);
 
 void dapp_module_reg(dapp_modules_type_t type, 
                            const char *name, 
@@ -75,11 +75,11 @@ void dapp_module_reg(dapp_modules_type_t type,
 
 void dapp_module_unreg(dapp_modules_type_t type);
 
-void dapp_module_lcore_init(dapp_modules_type_t type, uint16_t lcore_num);
+void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num);
 
 void dapp_module_lcore_uninit(dapp_modules_type_t type);
 
-void dapp_module_ws_init(dapp_modules_type_t type, void *data, uint32_t size);
+void dapp_module_ws_init(dapp_modules_type_t type, void *data, UINT32_T size);
 
 void dapp_module_ws_uninit(dapp_modules_type_t type);
 

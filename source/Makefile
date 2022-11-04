@@ -40,8 +40,9 @@ clean :
 	@rm $(BUILD_DIR) -rf
 	@echo " clean finish"
 
+include $(ROOT_DIR)/lib/lib.mk
+include $(SOURCE_DIR)/dpdk/dpdk.mk
 include $(SOURCE_DIR)/common/common.mk
 include $(SOURCE_DIR)/config/config.mk
 include $(SOURCE_DIR)/modules/modules.mk
-include $(SOURCE_DIR)/dpdk/dpdk.mk
-include $(ROOT_DIR)/lib/lib.mk
+

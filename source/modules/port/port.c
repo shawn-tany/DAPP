@@ -8,8 +8,6 @@ typedef struct
 
 int dapp_port_init(void *arg)
 {
-    
-
     return DAPP_OK;
 }
 

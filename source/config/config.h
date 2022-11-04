@@ -7,12 +7,12 @@
 #define DAPP_MAX_PORT_NUM 64
 
 typedef struct {
-    uint16_t node_size;
-    uint32_t node_num;
+    UINT16_T node_size;
+    UINT32_T node_num;
 } dapp_mempool_conf_t;
 
 typedef struct {
-    uint8_t port_num;
+    UINT8_T port_num;
     char ports[DAPP_MAX_PORT_NUM][DAPP_PORT_NAME_SIZE];
 } dapp_port_conf_t;
 
@@ -22,23 +22,23 @@ typedef struct {
 typedef struct 
 {
     struct {
-        uint8_t thread_num;
+        UINT8_T thread_num;
         dapp_mempool_conf_t mempool;
         dapp_port_conf_t port;
     } port;
 
     struct {
-        uint8_t thread_num;
+        UINT8_T thread_num;
         dapp_mempool_conf_t mempool;
-        uint32_t window;
+        UINT32_T window;
     } flows;
 
     struct {
-        uint8_t thread_num;
+        UINT8_T thread_num;
     } rule;
 
     struct {
-        uint8_t thread_num;
+        UINT8_T thread_num;
     } protocol;
 } dapp_conf_t;
 

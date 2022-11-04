@@ -15,12 +15,12 @@ char *dapp_module_name_get(dapp_modules_type_t type)
     return MODULES.module[type].reg.name;
 }
 
-uint64_t dapp_modules_total_lcore_mask_get(void)
+UINT64_T dapp_modules_total_lcore_mask_get(void)
 {
     return MODULES.lcore_mask;
 }
 
-uint64_t dapp_module_lcore_mask_get(dapp_modules_type_t type)
+UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return 0;
@@ -29,10 +29,10 @@ uint64_t dapp_module_lcore_mask_get(dapp_modules_type_t type)
     return MODULES.module[type].lcore.lcore_mask;
 }
 
-dapp_module_t *dapp_module_get_by_lcore(uint64_t lcore)
+dapp_module_t *dapp_module_get_by_lcore(UINT64_T lcore)
 {
     int i = 0;
-    uint64_t t;
+    UINT64_T t;
 
     for (i = 0; i < MODULES_ITEM(MODULES.module); ++i) {
 
@@ -91,14 +91,14 @@ void dapp_module_unreg(dapp_modules_type_t type)
     MODULES.module[type].reg.reg = 0;
 }
 
-void dapp_module_lcore_init(dapp_modules_type_t type, uint16_t lcore_num)
+void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
     }
 
     int i = 0;
-    uint64_t mask = 0;
+    UINT64_T mask = 0;
 
     for (i = 0; i < lcore_num; ++i) {
         /*

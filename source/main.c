@@ -22,7 +22,7 @@ typedef struct
 {
     char program[128];
     dapp_conf_t conf;
-    uint64_t lcore_mask;
+    UINT64_T lcore_mask;
 } dapp_usrspace_t;
 
 static STATUS dapp_usrspace_init(int argc, char **argv, dapp_usrspace_t *usrspace)

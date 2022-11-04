@@ -39,8 +39,8 @@ static STATUS dapp_port_conf_parse(dapp_conf_t *conf, json_t *port)
         return DAPP_ERR_JSON_FMT;
     }
 
-    uint32_t i = 0;
-    uint32_t array_size = json_array_size(obj);
+    UINT32_T i = 0;
+    UINT32_T array_size = json_array_size(obj);
 
     for (i = 0; i < array_size; ++i) {
         if (!(sub_obj = json_array_get(obj, i))) {
@@ -189,8 +189,8 @@ STATUS dapp_conf_parse(dapp_conf_t *conf, const char *file_name)
         return DAPP_ERR_JSON_FMT;
     }
 
-    uint32_t i = 0;
-    uint32_t array_size = json_array_size(root);
+    UINT32_T i = 0;
+    UINT32_T array_size = json_array_size(root);
     json_t *conf_obj = NULL;
     STATUS ret = DAPP_OK;
 
