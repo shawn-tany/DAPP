@@ -41,8 +41,12 @@ clean :
 	@echo " clean finish"
 
 include $(SOURCE_DIR)/common/common.mk
-include $(SOURCE_DIR)/control/control.mk
 include $(SOURCE_DIR)/config/config.mk
-include $(SOURCE_DIR)/dpdk/dpdk.mk
+include $(SOURCE_DIR)/control/control.mk
+include $(SOURCE_DIR)/files/files.mk
+include $(SOURCE_DIR)/flows/flows.mk
+include $(SOURCE_DIR)/protocol/protocol.mk
+include $(SOURCE_DIR)/restore/restore.mk
 include $(SOURCE_DIR)/rule/rule.mk
+include $(SOURCE_DIR)/dpdk/dpdk.mk
 include $(ROOT_DIR)/lib/lib.mk

@@ -101,7 +101,7 @@ static STATUS dapp_usrspace_init(int argc, char **argv, dapp_usrspace_t *usrspac
     dapp_module_lcore_init(DAPP_MODULE_PORT, usrspace->conf.port.thread_num);
     dapp_module_lcore_init(DAPP_MODULE_FLOWS, usrspace->conf.flows.thread_num);
     dapp_module_lcore_init(DAPP_MODULE_PROTOCOL, usrspace->conf.protocol.thread_num);
-    dapp_module_lcore_init(DAPP_MODULE_PROTOCOL, usrspace->conf.rule.thread_num);
+    dapp_module_lcore_init(DAPP_MODULE_RULE, usrspace->conf.rule.thread_num);
 
     usrspace->lcore_mask = dapp_modules_total_lcore_mask_get();
 
