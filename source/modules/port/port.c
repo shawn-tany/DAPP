@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include "modules.h"
 
+typedef struct 
+{
+    
+} dapp_port_ws_t;
+
 int dapp_port_init(void *arg)
 {
+    
+
     return DAPP_OK;
 }
 

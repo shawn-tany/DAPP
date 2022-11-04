@@ -90,13 +90,13 @@ void dapp_module_ws_uninit(dapp_modules_type_t type);
 #define DAPP_MODULE_UNREG(module) _DAPP_MODULE_UNREG(module)
 
 #define DAPP_MODULE_REG_CONSTRUCTOR(type, name, init, exec, exit)   \
-    static __attribute__((constructor)) DAPP_MODULE_REG(name)() {  \
-        dapp_module_reg(type, #name, init, exec, exit);              \
-    }                                                                               
+    static __attribute__((constructor)) DAPP_MODULE_REG(name)() {   \
+        dapp_module_reg(type, #name, init, exec, exit);             \
+    }
 
 #define DAPP_MODULE_UNREG_DESTRUCTOR(type, name)                    \
-    static __attribute__((destructor)) DAPP_MODULE_UNREG(name)() { \
+    static __attribute__((destructor)) DAPP_MODULE_UNREG(name)() {  \
         dapp_module_unreg(type);                                    \
-    }  
+    }
 
 #endif

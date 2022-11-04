@@ -46,6 +46,15 @@ dapp_module_t *dapp_module_get_by_lcore(uint64_t lcore)
     return NULL;
 }
 
+dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return NULL;
+    }
+
+    return &MODULES.module[type];
+}
+
 void dapp_module_reg(dapp_modules_type_t type, 
                          const char *name, 
                          dapp_module_init init, 

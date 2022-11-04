@@ -165,6 +165,12 @@ static int dapp_work(__attribute__((unused)) void *arg)
     }
 
     printf("dapp lcore(%d) is running! module %s\n", lcore_id, module->reg.name);
+
+    module->reg.init(NULL);
+
+    module->reg.exec(NULL);
+
+    module->reg.exit(NULL);
     
     return 0;
 }

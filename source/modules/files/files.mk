@@ -1,4 +1,4 @@
-FILES_DIR = $(SOURCE_DIR)/files
+FILES_DIR = $(MODULES_DIR)/files
 
 SRCS += $(FILES_DIR)/files.c
 

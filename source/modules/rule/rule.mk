@@ -1,4 +1,4 @@
-RULE_DIR = $(SOURCE_DIR)/rule
+RULE_DIR = $(MODULES_DIR)/rule
 
 SRCS += $(RULE_DIR)/rule.c
 

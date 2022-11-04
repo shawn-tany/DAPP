@@ -1,4 +1,4 @@
- CONTROL_DIR = $(SOURCE_DIR)/control
+ CONTROL_DIR = $(MODULES_DIR)/control
 
 SRCS += $(CONTROL_DIR)/control.c
 

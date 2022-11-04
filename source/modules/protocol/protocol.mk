@@ -1,4 +1,4 @@
-PROTOCOL_DIR = $(SOURCE_DIR)/protocol
+PROTOCOL_DIR = $(MODULES_DIR)/protocol
 
 SRCS += $(PROTOCOL_DIR)/protocol.c
 

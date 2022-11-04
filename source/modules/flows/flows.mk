@@ -1,4 +1,4 @@
-FLOWS_DIR = $(SOURCE_DIR)/flows
+FLOWS_DIR = $(MODULES_DIR)/flows
 
 SRCS += $(FLOWS_DIR)/flows.c
 

@@ -1,4 +1,4 @@
-RESTORE_DIR = $(SOURCE_DIR)/restore
+RESTORE_DIR = $(MODULES_DIR)/restore
 
 SRCS += $(RESTORE_DIR)/restore.c
 
