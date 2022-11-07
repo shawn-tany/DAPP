@@ -27,7 +27,7 @@
     }                                       \
                                             \
     val = mask << ((sizeof(mask) * 8) - bit - 1);\
-    val = val >> (sizeof(mask) * 8 - 1); \
+    val = val >> (sizeof(mask) * 8 - 1);    \
 }
 
 #define DAPP_MASK_PRT(mask)                 \

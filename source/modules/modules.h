@@ -67,6 +67,8 @@ UINT64_T dapp_modules_total_lcore_mask_get(void);
 
 dapp_module_t *dapp_module_get_by_lcore(UINT64_T lcore);
 
+dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type);
+
 void dapp_module_reg(dapp_modules_type_t type, 
                            const char *name, 
                            dapp_module_init init, 
@@ -83,6 +85,9 @@ void dapp_module_ws_init(dapp_modules_type_t type, void *data, UINT32_T size);
 
 void dapp_module_ws_uninit(dapp_modules_type_t type);
 
+/*
+ * Macro of modules registration
+ */
 #define _DAPP_MODULE_REG(module) dapp_module_reg_##module
 #define DAPP_MODULE_REG(module) _DAPP_MODULE_REG(module)
 

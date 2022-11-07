@@ -27,7 +27,7 @@ ALL :
 	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
 	
 	@# compile
-	$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/bin/$(APP) $(LIBS)
+	@$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/bin/$(APP) $(LIBS)
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/$(APP) $(PACKAGE_DIR)/bin

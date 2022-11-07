@@ -97,6 +97,10 @@ void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
         return ;
     }
 
+    if (!MODULES.module[type].reg.reg) {
+        return ;
+    }
+
     int i = 0;
     UINT64_T mask = 0;
 
@@ -122,6 +126,10 @@ void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
 void dapp_module_lcore_uninit(dapp_modules_type_t type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
+        return ;
+    }
+
+    if (!MODULES.module[type].reg.reg) {
         return ;
     }
 

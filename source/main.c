@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <assert.h>
+#include <signal.h>
 
 #include "common.h"
 #include "config.h"
@@ -24,6 +25,18 @@ typedef struct
     dapp_conf_t conf;
     UINT64_T lcore_mask;
 } dapp_usrspace_t;
+
+static void signal_handle(int sig)
+{
+    int i;
+
+    /*
+     * Stop all modules
+     */
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
+        dapp_module_lcore_uninit(i);
+    }
+}
 
 static STATUS dapp_usrspace_init(int argc, char **argv, dapp_usrspace_t *usrspace)
 {
@@ -160,16 +173,30 @@ static int dapp_work(__attribute__((unused)) void *arg)
     module = dapp_module_get_by_lcore(lcore_id);
 
     if (!module) {
-        printf("invalid lcore id\n");
+        DAPP_TRACE("invalid lcore id\n");
         return -1;
     }
 
-    printf("dapp lcore(%d) is running! module %s\n", lcore_id, module->reg.name);
+    if (!module->reg.reg) {
+        DAPP_TRACE("module not registered in lcore(%d)!\n", lcore_id);
+        return -1;
+    }
 
+    DAPP_TRACE("dapp lcore(%d) is running! module %s\n", lcore_id, module->reg.name);
+
+    /*
+     * Module initialization
+     */
     module->reg.init(NULL);
 
+    /*
+     * Module execution
+     */
     module->reg.exec(NULL);
 
+    /*
+     * Module exit
+     */
     module->reg.exit(NULL);
     
     return 0;
@@ -182,18 +209,30 @@ int main(int argc, char *argv[])
     dapp_usrspace_t usrspace;
     memset(&usrspace, 0, sizeof(usrspace));
 
+    signal(SIGINT, signal_handle);
+    signal(SIGTERM, signal_handle);
+
     /*
      * Parse command line parameters
      */
     if (DAPP_OK != (ret = dapp_usrspace_init(argc, argv, &usrspace))) {
-        printf("dapp args parse fail\n");
+        DAPP_TRACE("dapp args parse fail\n");
         return ret;
     }
 
+    /*
+     * Initialize the dpdk with user configuration
+     */
     dpdk_init(&usrspace, dpdk_args_parse_callback);
 
+    /*
+     * Execute dpdk lcore
+     */
     dpdk_run(dapp_work, NULL);
 
+    /*
+     * Release dpdk resources
+     */
     dpdk_exit();
 
     return DAPP_OK;
