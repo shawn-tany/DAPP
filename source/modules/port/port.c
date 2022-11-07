@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "modules.h"
+#include "rte_ethdev.h"
 
 typedef struct 
 {
