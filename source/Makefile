@@ -17,7 +17,7 @@ SRCS = $(SOURCE_DIR)/main.c
 # all library are stored in SRCS
 
 CFLAGS += -g
-CFLAGS += -D DAPP_DEBUG=1
+#CFLAGS += -D DAPP_DEBUG=1
 CFLAGS += -O0
 
 ALL :
