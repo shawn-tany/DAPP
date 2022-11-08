@@ -41,6 +41,7 @@ typedef struct
         UINT8_T running : 1;
         UINT8_T var : 7;
         UINT64_T lcore_mask;
+        UINT8_T lcore_num;
     } lcore;
 
     /* Module Workspace */

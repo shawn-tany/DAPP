@@ -55,6 +55,24 @@ dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type)
     return &MODULES.module[type];
 }
 
+UINT8_T dapp_module_running(dapp_modules_type_t type)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return 0;
+    }
+
+    return MODULES.module[type].lcore.running;
+}
+
+UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return 0;
+    }
+
+    return MODULES.module[type].lcore.lcore_num;
+}
+
 void dapp_module_reg(dapp_modules_type_t type, 
                          const char *name, 
                          dapp_module_init init, 
@@ -119,7 +137,7 @@ void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
      * Set module running flag
      */
     MODULES.module[type].lcore.running = 1;
-    
+    MODULES.module[type].lcore.lcore_num = lcore_num;
     MODULES.lcore_num += lcore_num;
 }
 

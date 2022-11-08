@@ -48,4 +48,7 @@ typedef enum
     __attribute__((destructor)) func(args...);      \
 }
 
+#define DAPP_MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define DAPP_MIN(a, b) (((a) > (b)) ? (b) : (a))
+
 #endif

@@ -31,7 +31,7 @@ ALL :
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/$(APP) $(PACKAGE_DIR)/bin
-	@rm $(PACKAGE_DIR)/$(PACKAGE)
+	@rm $(PACKAGE_DIR)/$(PACKAGE) -rf
 	@tar -zcPf $(PACKAGE_DIR)/$(PACKAGE) $(PACKAGE_DIR)/*
 	@echo " make finish"
 
