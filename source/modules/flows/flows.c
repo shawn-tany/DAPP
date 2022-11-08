@@ -1,31 +1,43 @@
 #include <stdio.h>
 #include "modules.h"
 
+#include "rte_ring.h"
+
 typedef struct 
 {
-    
+    struct rte_ring *pkts_ring;
 } dapp_flows_ws_t;
+
+static dapp_flows_ws_t flows_ws;
 
 static void dapp_flows_loop(void)
 {
-    dapp_module_t *flows_module = NULL;
+    UINT32_T nmsg_deq;
+    struct rte_mbuf *mbuff[8];
 
-    flows_module = dapp_module_get_by_type(DAPP_MODULE_FLOWS);
-
-    if (!flows_module) {
-        DAPP_TRACE("invalid dapp modules type %d\n", DAPP_MODULE_FLOWS);
-        return ;
-    }
-
-    while (flows_module->lcore.running) {
+    while (dapp_module_running(DAPP_MODULE_FLOWS)) {
         DAPP_TRACE("dapp flows loop\n");
-        sleep(3);
+
+        nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, 8, NULL);
+
+        if (0 == nmsg_deq) {
+            continue;
+        }
+
+        printf("dequeue %d form ring\n", nmsg_deq);
     }
 }
 
 int dapp_flows_init(void *arg)
 {
     DAPP_TRACE("dapp flows init\n");
+
+    flows_ws.pkts_ring = rte_ring_lookup("PKTS_RING");
+
+    if (!flows_ws.pkts_ring) {
+        printf("Can not find ring %s!\n", "PKTS_RING");
+        return DAPP_FAIL;
+    }
 
     return DAPP_OK;
 }

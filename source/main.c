@@ -187,7 +187,7 @@ static int dapp_work(__attribute__((unused)) void *arg)
     /*
      * Module initialization
      */
-    if (0 > module->reg.init(NULL)) {
+    if (DAPP_OK != module->reg.init(NULL)) {
         DAPP_TRACE("lcore(%d) init failed!\n", lcore_id);
         return -1;
     }
@@ -195,7 +195,7 @@ static int dapp_work(__attribute__((unused)) void *arg)
     /*
      * Module execution
      */
-    if (0 > module->reg.exec(NULL)) {
+    if (DAPP_OK != module->reg.exec(NULL)) {
         DAPP_TRACE("lcore(%d) exec failed!\n", lcore_id);
         return -1;
     }
@@ -203,7 +203,7 @@ static int dapp_work(__attribute__((unused)) void *arg)
     /*
      * Module exit
      */
-    if (0 > module->reg.exit(NULL)) {
+    if (DAPP_OK != module->reg.exit(NULL)) {
         DAPP_TRACE("lcore(%d) exit faild!\n", lcore_id);
         return -1;
     }

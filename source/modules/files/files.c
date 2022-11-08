@@ -3,25 +3,10 @@
 
 typedef struct 
 {
-    
+    struct rte_ring *files_ring;
 } dapp_files_ws_t;
 
-static void dapp_files_loop(void)
-{
-    dapp_module_t *files_module = NULL;
-
-    files_module = dapp_module_get_by_type(DAPP_MODULE_FILES);
-
-    if (!files_module) {
-        DAPP_TRACE("invalid dapp modules type %d\n", DAPP_MODULE_FILES);
-        return ;
-    }
-
-    while (files_module->lcore.running) {
-        DAPP_TRACE("dapp files loop\n");
-        sleep(3);
-    }
-}
+static dapp_files_ws_t files_ws;
 
 int dapp_files_init(void *arg)
 {
@@ -33,8 +18,11 @@ int dapp_files_init(void *arg)
 int dapp_files_exec(void *arg)
 {
     DAPP_TRACE("dapp files exec\n");
-
-    dapp_files_loop();
+    
+    while (dapp_module_running(DAPP_MODULE_FILES)) {
+        DAPP_TRACE("dapp files loop\n");
+        sleep(3);
+    }
 
     return DAPP_OK;
 }
