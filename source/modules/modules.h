@@ -20,6 +20,14 @@ typedef enum
     
 } dapp_modules_type_t;
 
+typedef enum
+{
+    DAPP_MODULE_INIT_START = 1,
+    DAPP_MODULE_INIT_OK,
+    DAPP_MODULE_INIT_FAIL,
+
+} DAPP_INIT_STATUS;
+
 typedef int (*dapp_module_init)(void *);
 typedef int (*dapp_module_exec)(void *);
 typedef int (*dapp_module_exit)(void *);
@@ -39,7 +47,8 @@ typedef struct
     /* Usage of module lcore */
     struct {
         UINT8_T running : 1;
-        UINT8_T var : 7;
+        UINT8_T init_status : 2;
+        UINT8_T var : 5;
         UINT64_T lcore_mask;
         UINT8_T lcore_num;
     } lcore;
@@ -60,7 +69,7 @@ typedef struct
     UINT8_T lcore_num;
 } __attribute((__packed__)) dapp_modules_table_t;
 
-char *dapp_modules_name_get(dapp_modules_type_t type);
+char *dapp_modules_name_get_by_type(dapp_modules_type_t type);
 
 UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type);
 
@@ -69,6 +78,10 @@ UINT64_T dapp_modules_total_lcore_mask_get(void);
 dapp_module_t *dapp_module_get_by_lcore(UINT64_T lcore);
 
 dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type);
+
+void dapp_module_init_status_set(dapp_modules_type_t type, DAPP_INIT_STATUS status);
+
+STATUS dapp_module_init_wait(dapp_modules_type_t type);
 
 void dapp_module_reg(dapp_modules_type_t type, 
                            const char *name, 

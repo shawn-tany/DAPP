@@ -14,7 +14,6 @@
 typedef struct 
 {
     UINT32_T has_initd;
-    DAPP_PORT_STATUS port_status;
 
     UINT16_T n_rx_queue;
     UINT16_T n_tx_queue;
@@ -50,7 +49,7 @@ static int dapp_port_init(void *arg)
 
     DAPP_TRACE("initialize port module in lcore(%d)\n", rte_lcore_id());
 
-    port_ws.port_status = PORT_INIT_START;
+    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_START);
 
     /*
      * Get available port number
@@ -158,7 +157,7 @@ static int dapp_port_init(void *arg)
         MAC_PRINT(mac_addr.addr_bytes);
     }
 
-    port_ws.port_status = PORT_INIT_OK;
+    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_OK);
 
     /*
      * Create pkts ring
@@ -176,7 +175,7 @@ static int dapp_port_init(void *arg)
 
 FAIL :
     
-    port_ws.port_status = PORT_INIT_FAIL;
+    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_FAIL);
     
     return DAPP_FAIL;
 }
@@ -194,13 +193,11 @@ static int dapp_port_exec(void *arg)
     /*
      * Wait port moudle initialized
      */
-    while (PORT_INIT_OK != port_ws.port_status) {
-        DAPP_TRACE("lcore(%d) wait port init finish ...\n", lcore_id);
-        sleep(1);
+    ret = dapp_module_init_wait(DAPP_MODULE_PORT);
 
-        if (PORT_INIT_FAIL == port_ws.port_status) {
-            return DAPP_FAIL;
-        }
+    if (DAPP_OK != ret) {
+        printf("module %s wait fail! ERR : %d\n", dapp_modules_name_get_by_type(DAPP_MODULE_PORT), ret);
+        return ret;
     }
 
     UINT16_T rx_queue_id = lcore_id % port_ws.n_rx_queue;
@@ -249,13 +246,7 @@ static int dapp_port_exec(void *arg)
                 return DAPP_OK;
             }
 
-            /*
-             * Release pkt mbuf
-             */
-            //int i;
-            //for (i = 0; i < npkts_rx; ++i) {
-            //    rte_pktmbuf_free(mbuff[i]);
-            //}
+            DAPP_TRACE("enqueue %d form ring\n", nmsg_enq);
         }
     }
 

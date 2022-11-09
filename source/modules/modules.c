@@ -4,10 +4,8 @@
 
 static dapp_modules_table_t MODULES;
 
-char *dapp_module_name_get(dapp_modules_type_t type)
+char *dapp_modules_name_get_by_type(dapp_modules_type_t type)
 {
-    int i = 0;
-
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return "unknow";
     }
@@ -71,6 +69,37 @@ UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
     }
 
     return MODULES.module[type].lcore.lcore_num;
+}
+
+void dapp_module_init_status_set(dapp_modules_type_t type, DAPP_INIT_STATUS status)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return ;
+    }
+
+    MODULES.module[type].lcore.init_status = status;
+}
+
+#define DAPP_MODULE_WAIT_TIMES (300)
+
+STATUS dapp_module_init_wait(dapp_modules_type_t type)
+{
+    UINT32_T times = 0;
+
+    while (DAPP_MODULE_INIT_OK != MODULES.module[type].lcore.init_status) {
+
+        if (DAPP_MODULE_INIT_FAIL == MODULES.module[type].lcore.init_status) {
+            return DAPP_FAIL;
+        }
+
+        sleep(1);
+
+        if (times++ >= DAPP_MODULE_WAIT_TIMES) {
+            return DAPP_ERR_MODL_TIMEOUT;
+        } 
+    }
+
+    return DAPP_OK;
 }
 
 void dapp_module_reg(dapp_modules_type_t type, 

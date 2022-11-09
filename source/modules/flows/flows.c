@@ -2,6 +2,7 @@
 #include "modules.h"
 
 #include "rte_ring.h"
+#include "rte_mbuf.h"
 
 typedef struct 
 {
@@ -10,27 +11,21 @@ typedef struct
 
 static dapp_flows_ws_t flows_ws;
 
-static void dapp_flows_loop(void)
-{
-    UINT32_T nmsg_deq;
-    struct rte_mbuf *mbuff[8];
-
-    while (dapp_module_running(DAPP_MODULE_FLOWS)) {
-        DAPP_TRACE("dapp flows loop\n");
-
-        nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, 8, NULL);
-
-        if (0 == nmsg_deq) {
-            continue;
-        }
-
-        printf("dequeue %d form ring\n", nmsg_deq);
-    }
-}
-
 int dapp_flows_init(void *arg)
 {
     DAPP_TRACE("dapp flows init\n");
+
+    int ret;
+
+    /*
+     * Wait port moudle initialized
+     */
+    ret = dapp_module_init_wait(DAPP_MODULE_PORT);
+
+    if (DAPP_OK != ret) {
+        printf("module %s wait fail! ERR : %d\n", dapp_modules_name_get_by_type(DAPP_MODULE_PORT), ret);
+        return ret;
+    }
 
     flows_ws.pkts_ring = rte_ring_lookup("PKTS_RING");
 
@@ -46,7 +41,29 @@ int dapp_flows_exec(void *arg)
 {
     DAPP_TRACE("dapp flows exec\n");
 
-    dapp_flows_loop();
+    UINT32_T nmsg_deq;
+    struct rte_mbuf *mbuff[8];
+
+    while (dapp_module_running(DAPP_MODULE_FLOWS)) {
+
+        DAPP_TRACE("dapp flows loop\n");
+
+        nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, 8, NULL);
+
+        if (0 == nmsg_deq) {
+            continue;
+        }
+
+        DAPP_TRACE("dequeue %d form ring\n", nmsg_deq);
+
+        /*
+         * Release pkt mbuf
+         */
+        int i;
+        for (i = 0; i < nmsg_deq; ++i) {
+            rte_pktmbuf_free(mbuff[i]);
+        }
+    }
 
     return DAPP_OK;
 }
