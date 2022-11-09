@@ -28,6 +28,13 @@ typedef enum
 
 } DAPP_INIT_STATUS;
 
+typedef enum 
+{
+	DAPP_MODULE_INIT_ONCE = 0,
+	DAPP_MODULE_INIT_ALL,
+	
+} DAPP_INIT_OPTIONS;
+
 typedef int (*dapp_module_init)(void *);
 typedef int (*dapp_module_exec)(UINT8_T *, void *);
 typedef int (*dapp_module_exit)(void *);
