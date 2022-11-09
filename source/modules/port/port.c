@@ -193,7 +193,7 @@ static int dapp_port_exec(void *arg)
     /*
      * Wait port moudle initialized
      */
-    ret = dapp_module_init_wait(DAPP_MODULE_PORT);
+    ret = dapp_module_init_wait(1, DAPP_MODULE_PORT);
 
     if (DAPP_OK != ret) {
         printf("module %s wait fail! ERR : %d\n", dapp_modules_name_get_by_type(DAPP_MODULE_PORT), ret);

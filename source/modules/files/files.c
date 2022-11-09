@@ -20,7 +20,7 @@ int dapp_files_exec(void *arg)
     DAPP_TRACE("dapp files exec\n");
     
     while (dapp_module_running(DAPP_MODULE_FILES)) {
-        DAPP_TRACE("dapp files loop\n");
+
         sleep(3);
     }
 

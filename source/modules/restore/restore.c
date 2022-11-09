@@ -18,7 +18,7 @@ static void dapp_restore_loop(void)
     }
 
     while (restore_module->lcore.running) {
-        DAPP_TRACE("dapp restore loop\n");
+
         sleep(3);
     }
 }

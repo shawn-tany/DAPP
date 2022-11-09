@@ -18,7 +18,7 @@ static void dapp_rule_loop(void)
     }
 
     while (rule_module->lcore.running) {
-        DAPP_TRACE("dapp rule loop\n");
+
         sleep(3);
     }
 }

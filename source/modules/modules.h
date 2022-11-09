@@ -48,6 +48,7 @@ typedef struct
     struct {
         UINT8_T running : 1;
         UINT8_T init_status : 2;
+        
         UINT8_T var : 5;
         UINT64_T lcore_mask;
         UINT8_T lcore_num;
@@ -81,7 +82,7 @@ dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type);
 
 void dapp_module_init_status_set(dapp_modules_type_t type, DAPP_INIT_STATUS status);
 
-STATUS dapp_module_init_wait(dapp_modules_type_t type);
+STATUS dapp_module_init_wait(int wait_num, ...);
 
 void dapp_module_reg(dapp_modules_type_t type, 
                            const char *name, 

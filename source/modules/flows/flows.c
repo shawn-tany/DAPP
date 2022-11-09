@@ -13,19 +13,21 @@ static dapp_flows_ws_t flows_ws;
 
 int dapp_flows_init(void *arg)
 {
-    DAPP_TRACE("dapp flows init\n");
-
     int ret;
 
     /*
      * Wait port moudle initialized
      */
-    ret = dapp_module_init_wait(DAPP_MODULE_PORT);
+    ret = dapp_module_init_wait(1, DAPP_MODULE_PORT);
 
     if (DAPP_OK != ret) {
         printf("module %s wait fail! ERR : %d\n", dapp_modules_name_get_by_type(DAPP_MODULE_PORT), ret);
         return ret;
     }
+    
+    DAPP_TRACE("dapp flows init\n");
+
+    dapp_module_init_status_set(DAPP_MODULE_FLOWS, DAPP_MODULE_INIT_START);
 
     flows_ws.pkts_ring = rte_ring_lookup("PKTS_RING");
 
@@ -33,6 +35,8 @@ int dapp_flows_init(void *arg)
         printf("Can not find ring %s!\n", "PKTS_RING");
         return DAPP_FAIL;
     }
+
+    dapp_module_init_status_set(DAPP_MODULE_FLOWS, DAPP_MODULE_INIT_OK);
 
     return DAPP_OK;
 }
@@ -45,8 +49,6 @@ int dapp_flows_exec(void *arg)
     struct rte_mbuf *mbuff[8];
 
     while (dapp_module_running(DAPP_MODULE_FLOWS)) {
-
-        DAPP_TRACE("dapp flows loop\n");
 
         nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, 8, NULL);
 

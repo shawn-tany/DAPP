@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdarg.h>
+
 #include "modules.h"
 #include "dapp_code.h"
 
@@ -80,24 +82,43 @@ void dapp_module_init_status_set(dapp_modules_type_t type, DAPP_INIT_STATUS stat
     MODULES.module[type].lcore.init_status = status;
 }
 
-#define DAPP_MODULE_WAIT_TIMES (300)
+#define DAPP_MODULE_WAIT_TIMES (60)
 
-STATUS dapp_module_init_wait(dapp_modules_type_t type)
+STATUS dapp_module_init_wait(int wait_num, ...)
 {
-    UINT32_T times = 0;
+    va_list valist;
 
-    while (DAPP_MODULE_INIT_OK != MODULES.module[type].lcore.init_status) {
+    va_start(valist, wait_num);
 
-        if (DAPP_MODULE_INIT_FAIL == MODULES.module[type].lcore.init_status) {
-            return DAPP_FAIL;
+    dapp_modules_type_t wait_type;
+
+    int i;
+
+    for (i = 0; i < wait_num; ++i) {
+
+        UINT32_T times = 0;
+
+        wait_type = va_arg(valist, dapp_modules_type_t);
+
+        printf("============================ wait %d\n", wait_type);
+
+        while (DAPP_MODULE_INIT_OK != MODULES.module[wait_type].lcore.init_status) {
+
+            if (DAPP_MODULE_INIT_FAIL == MODULES.module[wait_type].lcore.init_status) {
+                return DAPP_FAIL;
+            }
+
+            sleep(1);
+
+            if (++times > DAPP_MODULE_WAIT_TIMES) {
+                return DAPP_ERR_MODL_TIMEOUT;
+            }
+
+            printf("wait %d times = %d\n", wait_type, times);
         }
-
-        sleep(1);
-
-        if (times++ >= DAPP_MODULE_WAIT_TIMES) {
-            return DAPP_ERR_MODL_TIMEOUT;
-        } 
     }
+
+    va_end(valist);
 
     return DAPP_OK;
 }
