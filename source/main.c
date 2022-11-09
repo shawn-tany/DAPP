@@ -118,6 +118,12 @@ static STATUS dapp_usrspace_init(int argc, char **argv, dapp_usrspace_t *usrspac
 
     usrspace->lcore_mask = dapp_modules_total_lcore_mask_get();
 
+    /*
+     * Update module relevance
+     */
+    dapp_module_rely_init(DAPP_MODULE_FLOWS, 1, DAPP_MODULE_PORT);
+    dapp_module_rely_init(DAPP_MODULE_PROTOCOL, 2, DAPP_MODULE_PORT, DAPP_MODULE_FLOWS);
+
     return DAPP_OK;
 }
 
@@ -161,51 +167,43 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
     return 0;
 }
 
-static int dapp_work(__attribute__((unused)) void *arg)
+static int dapp_work(void *arg)
 {
     int i = 0;
 
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
 
-    dapp_module_t *module = NULL;
+    dapp_modules_type_t type;
 
-    module = dapp_module_get_by_lcore(lcore_id);
+    type = dapp_module_type_get_by_lcore(lcore_id);
 
-    if (!module) {
+    if (DAPP_MODULE_TYPE_NUM <= type) {
         DAPP_TRACE("invalid lcore id\n");
         return -1;
     }
 
-    if (!module->reg.reg) {
-        DAPP_TRACE("module not registered in lcore(%d)!\n", lcore_id);
-        return -1;
+    STATUS ret;
+
+    ret = DAPP_MODL_INIT_MACHINE(type, arg);
+
+    if (DAPP_OK != ret) {
+        DAPP_TRACE("module %d init fail! ERR : %d\n", type, ret);
+        return DAPP_FAIL;
     }
 
-    DAPP_TRACE("dapp lcore(%d) is running! module %s\n", lcore_id, module->reg.name);
+    ret = DAPP_MODL_EXEC_MACHINE(type, arg);
 
-    /*
-     * Module initialization
-     */
-    if (DAPP_OK != module->reg.init(NULL)) {
-        DAPP_TRACE("lcore(%d) init failed!\n", lcore_id);
-        return -1;
+    if (DAPP_OK != ret) {
+        DAPP_TRACE("module %d exec fail! ERR : %d\n", type, ret);
+       return DAPP_FAIL;
     }
 
-    /*
-     * Module execution
-     */
-    if (DAPP_OK != module->reg.exec(NULL)) {
-        DAPP_TRACE("lcore(%d) exec failed!\n", lcore_id);
-        return -1;
-    }
+    ret = DAPP_MODL_EXIT_MACHINE(type, arg);
 
-    /*
-     * Module exit
-     */
-    if (DAPP_OK != module->reg.exit(NULL)) {
-        DAPP_TRACE("lcore(%d) exit faild!\n", lcore_id);
-        return -1;
+    if (DAPP_OK != ret) {
+        DAPP_TRACE("module %d exit fail! ERR : %d\n", type, ret);
+        return DAPP_FAIL;
     }
     
     return 0;

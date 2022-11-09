@@ -49,8 +49,6 @@ static int dapp_port_init(void *arg)
 
     DAPP_TRACE("initialize port module in lcore(%d)\n", rte_lcore_id());
 
-    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_START);
-
     /*
      * Get available port number
      */
@@ -58,7 +56,7 @@ static int dapp_port_init(void *arg)
 
     if (0 == n_ports) {
         printf("No ethernet device avalible!\n");
-        goto FAIL;
+        return DAPP_FAIL;
     }
     
     /*
@@ -68,7 +66,7 @@ static int dapp_port_init(void *arg)
 
     if (!port_ws.rx_mempool) {
         printf("pktmbuf pool %s create fail!\n", "DAPP_RX_MPOOL");
-        goto FAIL;;
+        return DAPP_FAIL;
     }
 
     /*
@@ -87,7 +85,7 @@ static int dapp_port_init(void *arg)
 
         if (0 > ret) {
             printf("Can not get ethernet device info! ERR : %d\n", ret);
-            goto FAIL;;
+            return DAPP_FAIL;
         }
 
         /*
@@ -106,7 +104,7 @@ static int dapp_port_init(void *arg)
 
         if (0 > ret) {
             printf("Can not configure device! ERR : %d\n", ret);
-            goto FAIL;;
+            return DAPP_FAIL;
         }
         
         /*
@@ -118,7 +116,7 @@ static int dapp_port_init(void *arg)
 
             if (0 > ret) {
                 printf("Can not setup rx queue(%d)! ERR : %d\n", queue_id, ret);
-                goto FAIL;;
+                return DAPP_FAIL;
             }
         }
 
@@ -130,7 +128,7 @@ static int dapp_port_init(void *arg)
 
             if (0 > ret) {
                 printf("Can not setup tx queue! ERR : %d\n", ret);
-                goto FAIL;
+                return DAPP_FAIL;
             }
         }
 
@@ -146,7 +144,7 @@ static int dapp_port_init(void *arg)
 
         if (0 > ret) {
             printf("Can not enable promiscuous mode\n");
-            goto FAIL;;
+            return DAPP_FAIL;
         }
 
         /*
@@ -156,8 +154,6 @@ static int dapp_port_init(void *arg)
         rte_eth_macaddr_get(port_id, &mac_addr);
         MAC_PRINT(mac_addr.addr_bytes);
     }
-
-    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_OK);
 
     /*
      * Create pkts ring
@@ -172,15 +168,9 @@ static int dapp_port_init(void *arg)
     DAPP_TRACE("dapp port init end\n");
 
     return DAPP_OK;
-
-FAIL :
-    
-    dapp_module_init_status_set(DAPP_MODULE_PORT, DAPP_MODULE_INIT_FAIL);
-    
-    return DAPP_FAIL;
 }
 
-static int dapp_port_exec(void *arg)
+static int dapp_port_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp port exec start\n");
 
@@ -190,23 +180,13 @@ static int dapp_port_exec(void *arg)
     
     UINT16_T lcore_id = rte_lcore_id();
 
-    /*
-     * Wait port moudle initialized
-     */
-    ret = dapp_module_init_wait(1, DAPP_MODULE_PORT);
-
-    if (DAPP_OK != ret) {
-        printf("module %s wait fail! ERR : %d\n", dapp_modules_name_get_by_type(DAPP_MODULE_PORT), ret);
-        return ret;
-    }
-
     UINT16_T rx_queue_id = lcore_id % port_ws.n_rx_queue;
     UINT16_T tx_queue_id = lcore_id % port_ws.n_tx_queue;
 
     /*
      * Port loop
      */
-    while (dapp_module_running(DAPP_MODULE_PORT)) {
+    while (*running) {
 
         UINT16_T port_id;
         UINT32_T npkts_rx;

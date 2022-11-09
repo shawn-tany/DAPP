@@ -6,6 +6,30 @@
 
 static dapp_modules_table_t MODULES;
 
+#define DAPP_MODULE_WAIT_TIMES (60)
+
+#define DAPP_MODULE_INIT_WAIT(type) {                                           \
+                                                                                \
+    UINT32_T times = 0;                                                         \
+                                                                                \
+    while (DAPP_MODULE_INIT_OK != MODULES.module[type].rely.init_status) {      \
+                                                                                \
+        if (DAPP_MODULE_INIT_FAIL == MODULES.module[type].rely.init_status) {   \
+            return DAPP_FAIL;                                                   \
+        }                                                                       \
+                                                                                \
+        sleep(1);                                                               \
+                                                                                \
+        if (++times > DAPP_MODULE_WAIT_TIMES) {                                 \
+            return DAPP_ERR_MODL_TIMEOUT;                                       \
+        }                                                                       \
+    }                                                                           \
+}
+
+#define DAPP_MODULE_INIT_STATUS_SET(type, status) {     \
+    MODULES.module[type].rely.init_status = status;     \
+}                                                       \
+
 char *dapp_modules_name_get_by_type(dapp_modules_type_t type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
@@ -29,41 +53,6 @@ UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type)
     return MODULES.module[type].lcore.lcore_mask;
 }
 
-dapp_module_t *dapp_module_get_by_lcore(UINT64_T lcore)
-{
-    int i = 0;
-    UINT64_T t;
-
-    for (i = 0; i < MODULES_ITEM(MODULES.module); ++i) {
-
-        DAPP_MASK_TST(MODULES.module[i].lcore.lcore_mask, lcore, t);
-    
-        if (t) {
-            return &MODULES.module[i];
-        }
-    }
-
-    return NULL;
-}
-
-dapp_module_t *dapp_module_get_by_type(dapp_modules_type_t type)
-{
-    if (DAPP_MODULE_TYPE_NUM <= type) {
-        return NULL;
-    }
-
-    return &MODULES.module[type];
-}
-
-UINT8_T dapp_module_running(dapp_modules_type_t type)
-{
-    if (DAPP_MODULE_TYPE_NUM <= type) {
-        return 0;
-    }
-
-    return MODULES.module[type].lcore.running;
-}
-
 UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
@@ -73,52 +62,127 @@ UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
     return MODULES.module[type].lcore.lcore_num;
 }
 
-void dapp_module_init_status_set(dapp_modules_type_t type, DAPP_INIT_STATUS status)
+dapp_modules_type_t dapp_module_type_get_by_lcore(UINT64_T lcore)
 {
-    if (DAPP_MODULE_TYPE_NUM <= type) {
-        return ;
-    }
+    int i = 0;
+    UINT64_T t;
 
-    MODULES.module[type].lcore.init_status = status;
-}
+    for (i = 0; i < MODULES_ITEM(MODULES.module); ++i) {
 
-#define DAPP_MODULE_WAIT_TIMES (60)
-
-STATUS dapp_module_init_wait(int wait_num, ...)
-{
-    va_list valist;
-
-    va_start(valist, wait_num);
-
-    dapp_modules_type_t wait_type;
-
-    int i;
-
-    for (i = 0; i < wait_num; ++i) {
-
-        UINT32_T times = 0;
-
-        wait_type = va_arg(valist, dapp_modules_type_t);
-
-        printf("============================ wait %d\n", wait_type);
-
-        while (DAPP_MODULE_INIT_OK != MODULES.module[wait_type].lcore.init_status) {
-
-            if (DAPP_MODULE_INIT_FAIL == MODULES.module[wait_type].lcore.init_status) {
-                return DAPP_FAIL;
-            }
-
-            sleep(1);
-
-            if (++times > DAPP_MODULE_WAIT_TIMES) {
-                return DAPP_ERR_MODL_TIMEOUT;
-            }
-
-            printf("wait %d times = %d\n", wait_type, times);
+        DAPP_MASK_TST(MODULES.module[i].lcore.lcore_mask, lcore, t);
+    
+        if (t) {
+            return i;
         }
     }
 
-    va_end(valist);
+    return DAPP_MODULE_TYPE_NUM;
+}
+
+STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= init_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[init_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+    
+    if (!MODULES.module[init_type].reg.init) {
+        return DAPP_ERR_MODL_INIT_NULL;
+    }
+
+    int i;
+
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
+
+        UINT64_T rely = 0;
+
+        DAPP_MASK_TST(MODULES.module[init_type].rely.rely_mask, i, rely);
+
+        if (rely) {
+            DAPP_MODULE_INIT_WAIT(i);
+        }
+    }
+
+    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_START);
+
+    ret = MODULES.module[init_type].reg.init(arg);
+
+    if (DAPP_OK != ret) {
+        DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_FAIL);
+        return ret;
+    }
+
+    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_OK);
+
+    return DAPP_OK;
+}
+
+STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= exec_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[exec_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+    
+    if (!MODULES.module[exec_type].reg.exec) {
+        return DAPP_ERR_MODL_EXEC_NULL;
+    }
+
+    int i;
+
+    DAPP_MODULE_INIT_WAIT(exec_type);
+    
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
+
+        UINT64_T rely = 0;
+
+        DAPP_MASK_TST(MODULES.module[exec_type].rely.rely_mask, i, rely);
+
+        if (rely) {
+            DAPP_MODULE_INIT_WAIT(i);
+        }
+    }
+
+    ret = MODULES.module[exec_type].reg.exec(&MODULES.module[exec_type].lcore.running, arg);
+
+    if (DAPP_OK != ret) {
+        return ret;
+    }
+
+    return DAPP_OK;
+}
+
+STATUS DAPP_MODL_EXIT_MACHINE(dapp_modules_type_t exit_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= exit_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[exit_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+
+    if (!MODULES.module[exit_type].reg.exit) {
+        return DAPP_ERR_MODL_EXIT_NULL;
+    }
+
+    ret = MODULES.module[exit_type].reg.exit(arg);
+
+    if (DAPP_OK != ret) {
+        return ret;
+    }
 
     return DAPP_OK;
 }
@@ -206,3 +270,58 @@ void dapp_module_lcore_uninit(dapp_modules_type_t type)
      */
     MODULES.module[type].lcore.running = 0;
 }
+
+void dapp_module_rely_init(dapp_modules_type_t type, int rely_num, ...)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return ;
+    }
+
+    if (!MODULES.module[type].reg.reg) {
+        return ;
+    }
+
+    va_list valist;
+
+    va_start(valist, rely_num);
+
+    dapp_modules_type_t rely_type;
+
+    int i;
+
+    for (i = 0; i < rely_num; ++i) {
+
+        rely_type = va_arg(valist, dapp_modules_type_t);
+
+        if (DAPP_MODULE_TYPE_NUM <= rely_type) {
+            continue;
+        }
+
+        DAPP_MASK_SET(MODULES.module[type].rely.rely_mask, rely_type);
+        MODULES.module[type].rely.rely_num++;
+    }
+
+    if (MODULES.module[type].rely.rely_num != rely_num) {
+        printf("exist unknow module type\n");
+    }
+
+    va_end(valist);
+}
+
+void dapp_module_rely_uninit(dapp_modules_type_t type)
+{
+    if (DAPP_MODULE_TYPE_NUM <= type) {
+        return ;
+    }
+
+    if (!MODULES.module[type].reg.reg) {
+        return ;
+    }
+
+    /*
+     * Cancel module relevace
+     */
+    MODULES.module[type].rely.rely_mask = 0;
+    MODULES.module[type].rely.rely_num = 0;
+}
+

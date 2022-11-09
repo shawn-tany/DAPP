@@ -8,26 +8,26 @@ typedef struct
 
 static dapp_files_ws_t files_ws;
 
-int dapp_files_init(void *arg)
+static int dapp_files_init(void *arg)
 {
     DAPP_TRACE("dapp files init\n");
 
     return DAPP_OK;
 }
 
-int dapp_files_exec(void *arg)
+static int dapp_files_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp files exec\n");
     
-    while (dapp_module_running(DAPP_MODULE_FILES)) {
-
+    while (*running) {
+        DAPP_TRACE("dapp files loop\n");
         sleep(3);
     }
 
     return DAPP_OK;
 }
 
-int dapp_files_exit(void *arg)
+static int dapp_files_exit(void *arg)
 {
     DAPP_TRACE("dapp files exit\n");
 
