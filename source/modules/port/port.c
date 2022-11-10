@@ -44,7 +44,7 @@ static int dapp_port_init(void *arg)
 
     if (ret == 0) {
         DAPP_TRACE("port module only need to be initialized once!\n");
-		sleep(5);
+        sleep(5);        
         return 0;
     }
 

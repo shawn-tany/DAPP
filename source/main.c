@@ -38,7 +38,7 @@ static void signal_handle(int sig)
     }
 }
 
-static STATUS dapp_usrspace_init(int argc, char **argv, dapp_usrspace_t *usrspace)
+static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
 {
     if (!argc || !argv || !usrspace) {
         return DAPP_ERR_PARAM;
@@ -176,6 +176,9 @@ static int dapp_work(void *arg)
 
     dapp_modules_type_t type;
 
+    /*
+     * Get module type according to lcore 
+     */
     type = dapp_module_type_get_by_lcore(lcore_id);
 
     if (DAPP_MODULE_TYPE_NUM <= type) {
@@ -185,6 +188,9 @@ static int dapp_work(void *arg)
 
     STATUS ret;
 
+    /*
+     * Initialize the module through the module initialization machine
+     */
     ret = DAPP_MODL_INIT_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
@@ -192,6 +198,9 @@ static int dapp_work(void *arg)
         return DAPP_FAIL;
     }
 
+    /*
+     * The module is executed by the module executor
+     */
     ret = DAPP_MODL_EXEC_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
@@ -199,6 +208,9 @@ static int dapp_work(void *arg)
        return DAPP_FAIL;
     }
 
+    /*
+     * Exit the module through the module exit machine
+     */
     ret = DAPP_MODL_EXIT_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
@@ -222,7 +234,7 @@ int main(int argc, char *argv[])
     /*
      * Parse command line parameters
      */
-    if (DAPP_OK != (ret = dapp_usrspace_init(argc, argv, &usrspace))) {
+    if (DAPP_OK != (ret = dapp_user_init(argc, argv, &usrspace))) {
         DAPP_TRACE("dapp args parse fail\n");
         return ret;
     }

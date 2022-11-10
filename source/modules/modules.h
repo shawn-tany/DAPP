@@ -30,9 +30,9 @@ typedef enum
 
 typedef enum 
 {
-	DAPP_MODULE_INIT_ONCE = 0,
-	DAPP_MODULE_INIT_ALL,
-	
+    DAPP_MODULE_INIT_ONCE = 0,
+    DAPP_MODULE_INIT_ALL,
+
 } DAPP_INIT_OPTIONS;
 
 typedef int (*dapp_module_init)(void *);
