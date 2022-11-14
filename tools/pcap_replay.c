@@ -7,6 +7,7 @@
 #include "rte_mbuf.h"
 #include "rte_mempool.h"
 #include "rte_ring.h"
+#include "rte_errno.h"
 
 typedef unsigned char UINT8_T;
 typedef unsigned short UINT16_T;
@@ -100,12 +101,18 @@ int pcap_replay_work(void *argv)
         return 0;
     }
 
-    pcap_replay_ctx.replay_pool = rte_pktmbuf_pool_create("PCAP_REPLAY_POOL", 5120, 0, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
+    pcap_replay_ctx.replay_pool = rte_mempool_lookup("PCAP_REPLAY_POOL");
 
     if (!pcap_replay_ctx.replay_pool) {
-        printf("pktmbuf pool %s create fail!\n", "PCAP_REPLAY_POOL");
-        return -1;
-    }
+        
+        pcap_replay_ctx.replay_pool = rte_mempool_create("PCAP_REPLAY_POOL", 10240, RTE_MBUF_DEFAULT_BUF_SIZE, 
+                                                     0, 0, NULL, NULL, NULL, NULL, rte_socket_id(), 0);
+
+        if (!pcap_replay_ctx.replay_pool) {
+            printf("mempool %s create fail! ERR : %d\n", "PCAP_REPLAY_POOL",  rte_errno);        
+            return -1;
+        }
+    }    
 
     if (pcap_replay_ctx.is_dir) {
         pcap_dir_replay();
@@ -113,14 +120,16 @@ int pcap_replay_work(void *argv)
         pcap_file_replay();
     }
 
+    rte_mempool_free(pcap_replay_ctx.replay_pool);
+
     return 0;
 }
 
 static struct option long_options[] = {
-    {"core",    required_argument,  0,  'c' },
-    {"dir",     required_argument,  0,  'd' },
-    {"file",    required_argument,  0,  'f' },
-    {0,         0,                  0,  0 }
+    {"core",    1,  0,  'c' },
+    {"dir",     1,  0,  'd' },
+    {"file",    1,  0,  'f' },
+    {0,         0,  0,  0 }
 };
 
 static int args_paser(int argc, char *argv[ ])
@@ -133,12 +142,12 @@ static int args_paser(int argc, char *argv[ ])
                 pcap_replay_ctx.core_num = atoi(optarg);
                 break;
             case 'd' :
-                snprintf(pcap_replay_ctx.pcap_path, sizeof(pcap_replay_ctx.core_num), "%s", optarg);
+                snprintf(pcap_replay_ctx.pcap_path, sizeof(pcap_replay_ctx.pcap_path), "%s", strdup(optarg));
                 pcap_replay_ctx.is_dir = 1;
                 break;
             case 'f' :
-                snprintf(pcap_replay_ctx.pcap_path, sizeof(pcap_replay_ctx.core_num), "%s", optarg);
-                pcap_replay_ctx.is_dir = 1;
+                snprintf(pcap_replay_ctx.pcap_path, sizeof(pcap_replay_ctx.pcap_path), "%s", strdup(optarg));
+                pcap_replay_ctx.is_dir = 0;
                 break;
             default :
                 return -1;
@@ -162,7 +171,7 @@ int main(int argc, char *argv[ ])
     argv1[argc1] = argvList[0];
     snprintf(argv1[argc1++], 256, "--proc-type=secondary");
     argv1[argc1] = argvList[1];
-    snprintf(argv1[argc1++], 256, "-c1");
+    snprintf(argv1[argc1++], 256, "-c80");
 
     /*
      * dpdk init
