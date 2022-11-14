@@ -40,13 +40,23 @@ static int dapp_port_init(void *arg)
     DAPP_TRACE("initialize port module in lcore(%d)\n", rte_lcore_id());
 
     /*
+     * Create pkts ring
+     */
+    port_ws.pkts_ring = rte_ring_create("PKTS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
+
+    if (!port_ws.pkts_ring) {
+        printf("ring %s create fail!\n", "PKTS_RING");
+        return DAPP_FAIL;
+    }
+
+    /*
      * Get available port number
      */
     UINT16_T n_ports = rte_eth_dev_count_avail();
 
     if (0 == n_ports) {
         printf("No ethernet device avalible!\n");
-        return DAPP_FAIL;
+        return DAPP_OK;
     }
     
     /*
@@ -144,16 +154,6 @@ static int dapp_port_init(void *arg)
         rte_eth_macaddr_get(port_id, &mac_addr);
         MAC_PRINT(mac_addr.addr_bytes);
     }
-
-    /*
-     * Create pkts ring
-     */
-    port_ws.pkts_ring = rte_ring_create("PKTS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
-
-    if (!port_ws.pkts_ring) {
-        printf("ring %s create fail!\n", "PKTS_RING");
-        return DAPP_FAIL;
-    }
     
     DAPP_TRACE("dapp port init end\n");
 
@@ -169,6 +169,10 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
     struct rte_mbuf *mbuff[DAPP_RX_MBUFS];
     
     UINT16_T lcore_id = rte_lcore_id();
+
+    if (!port_ws.n_rx_queue && !port_ws.n_tx_queue) {
+        return DAPP_OK;
+    }
 
     UINT16_T rx_queue_id = lcore_id % port_ws.n_rx_queue;
     UINT16_T tx_queue_id = lcore_id % port_ws.n_tx_queue;
