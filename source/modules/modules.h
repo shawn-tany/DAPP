@@ -24,14 +24,15 @@ typedef enum
 {
     DAPP_MODULE_INIT_START = 0,
     DAPP_MODULE_INIT_OK,
+    DAPP_MODULE_INIT_WAIT,
     DAPP_MODULE_INIT_FAIL,
 
 } DAPP_INIT_STATUS;
 
 typedef enum 
 {
-    DAPP_MODULE_INIT_ONCE = 0,
-    DAPP_MODULE_INIT_ALL,
+    DAPP_MODULE_UNI_INIT = 0,
+    DAPP_MODULE_MULTI_INIT,
 
 } DAPP_INIT_OPTIONS;
 
@@ -60,6 +61,8 @@ typedef struct
 
     /* Relevance of modules */
     struct {
+        UINT8_T multi_init;
+        UINT32_T has_initd;
         DAPP_INIT_STATUS init_status;
         UINT8_T rely_num;
         UINT64_T rely_mask; 
@@ -109,7 +112,7 @@ void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num);
 
 void dapp_module_lcore_uninit(dapp_modules_type_t type);
 
-void dapp_module_rely_init(dapp_modules_type_t type, int rely_num, ...);
+void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rely_num, ...);
 
 void dapp_module_rely_uninit(dapp_modules_type_t type);
 

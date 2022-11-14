@@ -122,6 +122,22 @@ static STATUS dapp_rule_conf_parse(dapp_conf_t *conf, json_t *rule)
     return DAPP_OK;
 }
 
+static STATUS dapp_files_conf_parse(dapp_conf_t *conf, json_t *files)
+{
+    if (!conf || !files) {
+        return DAPP_ERR_PARAM;
+    }
+
+    json_t *obj = NULL;
+
+    if (!(obj = json_object_get(files, "thread_num"))) {
+        return DAPP_ERR_JSON_CONF;
+    }
+    conf->files.thread_num = json_integer_value(obj);
+
+    return DAPP_OK;
+}
+
 static STATUS _dapp_conf_parse(dapp_conf_t *conf, json_t *obj_conf)
 {
     if (!conf || !obj_conf) {
@@ -155,6 +171,13 @@ static STATUS _dapp_conf_parse(dapp_conf_t *conf, json_t *obj_conf)
     if (!(obj = json_object_get(obj_conf, "rule"))) {
         return DAPP_ERR_JSON_CONF;
     } else if (DAPP_OK != (dapp_rule_conf_parse(conf, obj))) {
+        return DAPP_ERR_JSON_CONF;
+    }
+
+    /* files parse */
+    if (!(obj = json_object_get(obj_conf, "files"))) {
+        return DAPP_ERR_JSON_CONF;
+    } else if (DAPP_OK != (dapp_files_conf_parse(conf, obj))) {
         return DAPP_ERR_JSON_CONF;
     }
 
@@ -251,9 +274,13 @@ void dapp_conf_dump(dapp_conf_t *conf)
                conf->protocol.thread_num);
         printf("\n");
         printf("    rule config :\n"
+               "        thread num = %d\n", 
+               conf->rule.thread_num);
+        printf("\n");
+        printf("    files config :\n"
                "        thread num = %d\n"
                "##\n",
-               conf->rule.thread_num);
+               conf->files.thread_num);
     }
 }
 

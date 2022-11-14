@@ -7,6 +7,7 @@
 typedef struct 
 {
     struct rte_ring *pkts_ring;
+    struct rte_ring *flows_ring;
 } dapp_flows_ws_t;
 
 static dapp_flows_ws_t flows_ws;
@@ -24,6 +25,16 @@ static int dapp_flows_init(void *arg)
         return DAPP_FAIL;
     }
 
+    /*
+     * Create flows ring
+     */
+    flows_ws.flows_ring = rte_ring_create("FLOWS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
+
+    if (!flows_ws.flows_ring) {
+        printf("ring %s create fail!\n", "FLOWS_RING");
+        return DAPP_FAIL;
+    }
+
     return DAPP_OK;
 }
 
@@ -32,6 +43,7 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
     DAPP_TRACE("dapp flows exec\n");
 
     UINT32_T nmsg_deq;
+    UINT32_T nmsg_enq;
     struct rte_mbuf *mbuff[8];
 
     while (*running) {
@@ -42,14 +54,21 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
             continue;
         }
 
-        DAPP_TRACE("dequeue %d form ring\n", nmsg_deq);
+        DAPP_TRACE("dequeue %d form ring(%s)\n", nmsg_deq, "FLOWS_RING");
 
-        /*
-         * Release pkt mbuf
-         */
-        int i;
-        for (i = 0; i < nmsg_deq; ++i) {
-            rte_pktmbuf_free(mbuff[i]);
+        nmsg_enq = rte_ring_enqueue_bulk(flows_ws.flows_ring, (void **)mbuff, nmsg_deq, NULL);
+
+        if (0 == nmsg_deq) {
+
+            printf("Can not enqueue bulk to ring (%s)\n", "FLOWS_RING");
+
+            /*
+             * Release pkt mbuf
+             */
+            int i;
+            for (i = 0; i < nmsg_deq; ++i) {
+                rte_pktmbuf_free(mbuff[i]);
+            }
         }
     }
 

@@ -6,7 +6,7 @@ LIB_HYPERSCAN_DIR = $(LIB_DIR)/hyperscan
 
 CFLAGS += -I $(LIB_DPDK_DIR)/include
 CFLAGS += -I $(LIB_JANSSON_DIR)/include
-CFLAGS += -lpthread -lnuma -ldl -march=native
+CFLAGS += -lpthread -lnuma -ldl -march=native -lpcap
 
 CFLAGS += -L $(LIB_JANSSON_DIR)/lib -ljansson -Wl,-rpath=$(LIB_JANSSON_DIR)/lib
 CFLAGS += -L $(LIB_HYPERSCAN_DIR)/lib -lhs -Wl,-rpath=$(LIB_HYPERSCAN_DIR)/lib

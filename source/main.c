@@ -115,14 +115,16 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     dapp_module_lcore_init(DAPP_MODULE_FLOWS, usrspace->conf.flows.thread_num);
     dapp_module_lcore_init(DAPP_MODULE_PROTOCOL, usrspace->conf.protocol.thread_num);
     dapp_module_lcore_init(DAPP_MODULE_RULE, usrspace->conf.rule.thread_num);
+    dapp_module_lcore_init(DAPP_MODULE_FILES, usrspace->conf.files.thread_num);
 
     usrspace->lcore_mask = dapp_modules_total_lcore_mask_get();
 
     /*
      * Update module relevance
      */
-    dapp_module_rely_init(DAPP_MODULE_FLOWS, 1, DAPP_MODULE_PORT);
-    dapp_module_rely_init(DAPP_MODULE_PROTOCOL, 2, DAPP_MODULE_PORT, DAPP_MODULE_FLOWS);
+    dapp_module_rely_init(DAPP_MODULE_FLOWS, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_PORT);
+    dapp_module_rely_init(DAPP_MODULE_PROTOCOL, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_FLOWS);
+    dapp_module_rely_init(DAPP_MODULE_FILES, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_FLOWS);
 
     return DAPP_OK;
 }

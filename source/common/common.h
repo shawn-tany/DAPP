@@ -59,4 +59,23 @@ typedef enum
 #define DAPP_MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define DAPP_MIN(a, b) (((a) > (b)) ? (b) : (a))
 
+static inline int
+dapp_atomic32_cmpset(volatile UINT32_T *dst, UINT32_T exp, UINT32_T src)
+{
+    UINT8_T res;
+
+    asm volatile(
+        "lock ;"
+        "cmpxchgl %[src], %[dst];"
+        "sete %[res];"
+        : [res] "=a" (res),     /* output */
+        [dst] "=m" (*dst)
+        : [src] "r" (src),      /* input */
+        "a" (exp),
+        "m" (*dst)
+        : "memory");            /* no-clobber list */
+    
+    return res;
+}
+
 #endif

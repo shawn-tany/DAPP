@@ -40,6 +40,10 @@ typedef struct
     struct {
         UINT8_T thread_num;
     } protocol;
+
+    struct {
+        UINT8_T thread_num;
+    } files;
 } dapp_conf_t;
 
 /*

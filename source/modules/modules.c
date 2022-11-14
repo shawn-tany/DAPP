@@ -6,24 +6,25 @@
 
 static dapp_modules_table_t MODULES;
 
-#define DAPP_MODULE_WAIT_TIMES (60)
+#define DAPP_MODULE_WAIT_TIMES (15)
 
-#define DAPP_MODULE_INIT_WAIT(type) {                                           \
-                                                                                \
-    UINT32_T times = 0;                                                         \
-                                                                                \
-    while (DAPP_MODULE_INIT_OK != MODULES.module[type].rely.init_status) {      \
-                                                                                \
-        if (DAPP_MODULE_INIT_FAIL == MODULES.module[type].rely.init_status) {   \
-            return DAPP_FAIL;                                                   \
-        }                                                                       \
-                                                                                \
-        sleep(1);                                                               \
-                                                                                \
-        if (++times > DAPP_MODULE_WAIT_TIMES) {                                 \
-            return DAPP_ERR_MODL_TIMEOUT;                                       \
-        }                                                                       \
-    }                                                                           \
+#define DAPP_MODULE_INIT_WAIT(init_type, wait_type) {                               \
+                                                                                    \
+    UINT32_T times = 0;                                                             \
+                                                                                    \
+    while (DAPP_MODULE_INIT_OK != MODULES.module[wait_type].rely.init_status) {     \
+                                                                                    \
+        if (DAPP_MODULE_INIT_FAIL == MODULES.module[wait_type].rely.init_status) {  \
+            DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_FAIL);          \
+            return DAPP_FAIL;                                                       \
+        }                                                                           \
+                                                                                    \
+        sleep(1);                                                                   \
+                                                                                    \
+        if (++times > DAPP_MODULE_WAIT_TIMES) {                                     \
+            return DAPP_ERR_MODL_TIMEOUT;                                           \
+        }                                                                           \
+    }                                                                               \
 }
 
 #define DAPP_MODULE_INIT_STATUS_SET(type, status) {     \
@@ -95,6 +96,18 @@ STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg)
         return DAPP_ERR_MODL_INIT_NULL;
     }
 
+    /*
+     * initialized once
+     */
+    if (!MODULES.module[init_type].rely.multi_init) {
+        ret = dapp_atomic32_cmpset(&MODULES.module[init_type].rely.has_initd, 0, 1);
+
+        if (ret == 0) {
+            DAPP_TRACE("port module only need to be initialized once!\n");
+            return DAPP_OK;
+        }
+    }
+
     int i;
 
     for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
@@ -104,7 +117,7 @@ STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg)
         DAPP_MASK_TST(MODULES.module[init_type].rely.rely_mask, i, rely);
 
         if (rely) {
-            DAPP_MODULE_INIT_WAIT(i);
+            DAPP_MODULE_INIT_WAIT(init_type, i);
         }
     }
 
@@ -140,7 +153,7 @@ STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg)
 
     int i;
 
-    DAPP_MODULE_INIT_WAIT(exec_type);
+    DAPP_MODULE_INIT_WAIT(exec_type, exec_type);
     
     for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
 
@@ -149,7 +162,7 @@ STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg)
         DAPP_MASK_TST(MODULES.module[exec_type].rely.rely_mask, i, rely);
 
         if (rely) {
-            DAPP_MODULE_INIT_WAIT(i);
+            DAPP_MODULE_INIT_WAIT(exec_type, i);
         }
     }
 
@@ -271,7 +284,7 @@ void dapp_module_lcore_uninit(dapp_modules_type_t type)
     MODULES.module[type].lcore.running = 0;
 }
 
-void dapp_module_rely_init(dapp_modules_type_t type, int rely_num, ...)
+void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rely_num, ...)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -306,6 +319,8 @@ void dapp_module_rely_init(dapp_modules_type_t type, int rely_num, ...)
     }
 
     va_end(valist);
+
+    MODULES.module[type].rely.multi_init = multi_init;
 }
 
 void dapp_module_rely_uninit(dapp_modules_type_t type)
@@ -323,5 +338,6 @@ void dapp_module_rely_uninit(dapp_modules_type_t type)
      */
     MODULES.module[type].rely.rely_mask = 0;
     MODULES.module[type].rely.rely_num = 0;
+    MODULES.module[type].rely.multi_init = 0;
 }
 

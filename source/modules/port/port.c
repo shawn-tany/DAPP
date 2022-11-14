@@ -37,17 +37,6 @@ static int dapp_port_init(void *arg)
 
     int ret;
 
-    /*
-     * initialized once
-     */
-    ret = rte_atomic32_cmpset(&port_ws.has_initd, 0, 1);
-
-    if (ret == 0) {
-        DAPP_TRACE("port module only need to be initialized once!\n");
-        sleep(5);        
-        return 0;
-    }
-
     DAPP_TRACE("initialize port module in lcore(%d)\n", rte_lcore_id());
 
     /*
@@ -223,11 +212,20 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
             nmsg_enq = rte_ring_enqueue_bulk(port_ws.pkts_ring, (void **)mbuff, npkts_rx, NULL);
             
             if (0 == nmsg_enq) {
-                printf("Can not enqueue bulk to ring\n");
+                printf("Can not enqueue bulk to ring (%s)\n", "PKTS_RING");
+
+                /*
+                 * Release pkt mbuf
+                 */
+                int i;
+                for (i = 0; i < nmsg_enq; ++i) {
+                    rte_pktmbuf_free(mbuff[i]);
+                }
+            
                 return DAPP_OK;
             }
 
-            DAPP_TRACE("enqueue %d form ring\n", nmsg_enq);
+            DAPP_TRACE("enqueue %d form ring(%s)\n", nmsg_enq, "PKTS_RING");
         }
     }
 
