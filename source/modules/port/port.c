@@ -7,14 +7,13 @@
 #include "rte_lcore.h"
 #include "rte_mempool.h"
 #include "rte_ring.h"
+#include "rte_errno.h"
 
 #define MAC_PRINT(mac) printf("%02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5])
 #define DAPP_RX_MBUFS (8)
 
 typedef struct 
 {
-    UINT32_T has_initd;
-
     UINT16_T n_rx_queue;
     UINT16_T n_tx_queue;
 
@@ -45,7 +44,7 @@ static int dapp_port_init(void *arg)
     port_ws.pkts_ring = rte_ring_create("PKTS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
 
     if (!port_ws.pkts_ring) {
-        printf("ring %s create fail!\n", "PKTS_RING");
+        printf("ring %s create fail! ERR : %s\n", "PKTS_RING", rte_strerror(rte_errno));
         return DAPP_FAIL;
     }
 
@@ -62,10 +61,10 @@ static int dapp_port_init(void *arg)
     /*
      * Create rx mbuf pool
      */
-    port_ws.rx_mempool = rte_pktmbuf_pool_create("DAPP_RX_MPOOL", 10240, 0, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
+    port_ws.rx_mempool = rte_pktmbuf_pool_create("DAPP_RX_MPOOL", 102400, RTE_CACHE_LINE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
 
     if (!port_ws.rx_mempool) {
-        printf("pktmbuf pool %s create fail!\n", "DAPP_RX_MPOOL");
+        printf("pktmbuf pool %s create fail! ERR : %s\n", "DAPP_RX_MPOOL", rte_strerror(rte_errno));
         return DAPP_FAIL;
     }
 
@@ -83,8 +82,8 @@ static int dapp_port_init(void *arg)
 
         ret = rte_eth_dev_info_get(port_id, &dev_info);
 
-        if (0 > ret) {
-            printf("Can not get ethernet device info! ERR : %d\n", ret);
+        if (0 != ret) {
+            printf("Can not get ethernet device info! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
 
@@ -102,8 +101,8 @@ static int dapp_port_init(void *arg)
          */
         ret = rte_eth_dev_configure(port_id, port_ws.n_rx_queue, port_ws.n_tx_queue, &dev_conf_default);
 
-        if (0 > ret) {
-            printf("Can not configure device! ERR : %d\n", ret);
+        if (0 != ret) {
+            printf("Can not configure device! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
         
@@ -114,8 +113,8 @@ static int dapp_port_init(void *arg)
         for (queue_id = 0; queue_id < port_ws.n_rx_queue; ++queue_id) {
             ret = rte_eth_rx_queue_setup(port_id, queue_id, 128, rte_eth_dev_socket_id(port_id), NULL, port_ws.rx_mempool);
 
-            if (0 > ret) {
-                printf("Can not setup rx queue(%d)! ERR : %d\n", queue_id, ret);
+            if (0 != ret) {
+                printf("Can not setup rx queue(%d)! ERR : %s\n", queue_id, rte_strerror(ret));
                 return DAPP_FAIL;
             }
         }
@@ -126,8 +125,8 @@ static int dapp_port_init(void *arg)
         for (queue_id = 0; queue_id < port_ws.n_tx_queue; ++queue_id) {
             ret = rte_eth_tx_queue_setup(port_id, queue_id, 128, rte_eth_dev_socket_id(port_id), NULL);
 
-            if (0 > ret) {
-                printf("Can not setup tx queue! ERR : %d\n", ret);
+            if (0 != ret) {
+                printf("Can not setup tx queue! ERR : %s\n", rte_strerror(ret));
                 return DAPP_FAIL;
             }
         }
@@ -142,8 +141,8 @@ static int dapp_port_init(void *arg)
          */
         ret = rte_eth_promiscuous_enable(port_id);
 
-        if (0 > ret) {
-            printf("Can not enable promiscuous mode\n");
+        if (0 != ret) {
+            printf("Can not enable promiscuous mode! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
 

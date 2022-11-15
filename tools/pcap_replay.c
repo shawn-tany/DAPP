@@ -11,6 +11,7 @@
 
 typedef unsigned char UINT8_T;
 typedef unsigned short UINT16_T;
+typedef unsigned long long UINT64_T;
 
 static struct {
     char pcap_path[256];
@@ -24,6 +25,8 @@ static int pcap_dir_replay()
 {
     return 0;
 }
+
+static UINT64_T count_all = 0;
 
 static int pcap_file_replay()
 {
@@ -49,37 +52,41 @@ static int pcap_file_replay()
         const UINT8_T *pkt = pcap_next(p, &pkthdr);
 
         if (!pkt){
-            printf("Pcap file parse over !\n");
             file_end = 1;
         }
 
         printf("Length: %d\n", pkthdr.len);
 
-        if (0 > rte_pktmbuf_alloc_bulk(pcap_replay_ctx.replay_pool, mbuf, 8)) {
-            printf("Can not alloc bulk mbuf from mempool %s\n", "PCAP_REPLAY_POOL");
-            return -1;
+        if (0 != rte_pktmbuf_alloc_bulk(pcap_replay_ctx.replay_pool, mbuf, 8)) {
+            printf("Can not alloc bulk mbuf from mempool %s! ERR : %s\n", "DAPP_PCAP_REPLAY_POOL", rte_strerror(rte_errno));
+            break;
         }
 
         /*
          * Fill packet
          */
-        rte_memcpy(mbuf[msg_count]->buf_addr, pkt, pkthdr.len);
-        mbuf[msg_count]->data_len = pkthdr.len;
+        //rte_memcpy(mbuf[msg_count]->buf_addr, pkt, pkthdr.len);
+        //mbuf[msg_count]->data_len = pkthdr.len;
+        rte_pktmbuf_append(mbuf[msg_count], 500);
         msg_count++;
 
         if (8 == msg_count || file_end) {
             if (0 == rte_ring_enqueue_bulk(pcap_replay_ctx.pkts_ring, (void **)mbuf, 8, NULL)) {
                 printf("Can not enqueue mbuf to ring %s\n", "PKTS_RING");
-                return -1;
+                break;
             }
 
+            count_all += (msg_count + 1);
             msg_count = 0;
         }
         
         if (file_end) {
-            return 0;
+            printf("Pcap file parse over !\n");
+            break;
         }
     }
+
+    printf("packet count = %llu !\n", count_all);
 
     pcap_close(p);
 
@@ -91,6 +98,8 @@ static int pcap_file_replay()
  */
 int pcap_replay_work(void *argv)
 {
+    printf("pcap_replay...\n");
+
     /*
      * init ring
      */
@@ -101,15 +110,15 @@ int pcap_replay_work(void *argv)
         return 0;
     }
 
-    pcap_replay_ctx.replay_pool = rte_mempool_lookup("PCAP_REPLAY_POOL");
+    pcap_replay_ctx.replay_pool = rte_mempool_lookup("DAPP_PCAP_REPLAY_POOL");
 
     if (!pcap_replay_ctx.replay_pool) {
         
-        pcap_replay_ctx.replay_pool = rte_mempool_create("PCAP_REPLAY_POOL", 10240, RTE_MBUF_DEFAULT_BUF_SIZE, 
-                                                     0, 0, NULL, NULL, NULL, NULL, rte_socket_id(), 0);
+        pcap_replay_ctx.replay_pool = rte_mempool_create("DAPP_PCAP_REPLAY_POOL", 102400, RTE_MBUF_DEFAULT_BUF_SIZE, 
+                                                     RTE_CACHE_LINE_SIZE, 0, NULL, NULL, NULL, NULL, rte_socket_id(), 0);
 
         if (!pcap_replay_ctx.replay_pool) {
-            printf("mempool %s create fail! ERR : %d\n", "PCAP_REPLAY_POOL",  rte_errno);        
+            printf("mempool %s create fail! ERR : %s\n", "PCAP_REPLAY_POOL",  rte_strerror(rte_errno));        
             return -1;
         }
     }    
