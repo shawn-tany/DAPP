@@ -18,7 +18,6 @@ static int dapp_rule_exec(UINT8_T *running, void *arg)
     DAPP_TRACE("dapp rule exec\n");
 
     while (*running) {
-        DAPP_TRACE("dapp rule loop\n");
         sleep(3);
     }
 

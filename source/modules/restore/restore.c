@@ -18,7 +18,6 @@ static int dapp_restore_exec(UINT8_T *running, void *arg)
     DAPP_TRACE("dapp restore exec\n");
 
     while (*running) {
-        DAPP_TRACE("dapp restore loop\n");
         sleep(3);
     }
 

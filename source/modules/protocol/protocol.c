@@ -18,7 +18,6 @@ static int dapp_protocol_exec(UINT8_T *running, void *arg)
     DAPP_TRACE("dapp protocol exec\n");
 
     while (*running) {
-        DAPP_TRACE("dapp protocol loop\n");
         sleep(3);
     }
 

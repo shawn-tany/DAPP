@@ -65,12 +65,17 @@ static int dapp_files_init(void *arg)
     return DAPP_OK;
 }
 
+static UINT64_T deq_count = 0;
+static UINT64_T enq_count = 0;
+static UINT64_T rls_count = 0;
+
 static int dapp_files_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp files exec\n");
 
     UINT32_T nmsg_deq;
     struct rte_mbuf *mbuff[8];
+    char *pktbuf;
 
     /*
      * Open pcap file
@@ -85,7 +90,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
             continue;
         }
 
-        DAPP_TRACE("dequeue %d form ring(%s)\n", nmsg_deq, "FLOWS_RING");
+        deq_count += nmsg_deq;
 
         /*
          * Release pkt mbuf
@@ -93,11 +98,17 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
         int i;
         for (i = 0; i < nmsg_deq; ++i) {
 
-            char *pktbuf = rte_pktmbuf_mtod(mbuff[i], char *);
+            pktbuf = rte_pktmbuf_mtod(mbuff[i], char *);
+
+            if (!mbuff[i]->data_len) {
+                continue;
+            }
 
             dapp_pcap_dump(pktbuf, mbuff[i]->data_len);
         
             rte_pktmbuf_free(mbuff[i]);
+
+            rls_count++;
         }
     }
 
@@ -107,6 +118,10 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
 static int dapp_files_exit(void *arg)
 {
     DAPP_TRACE("dapp files exit\n");
+
+    DAPP_TRACE("module files dequeue form ring(%s)  count = %llu\n", files_ws.flows_ring->name, deq_count);
+    DAPP_TRACE("module files enqueue form ring(%s)  count = %llu\n", files_ws.flows_ring->name, enq_count);
+    DAPP_TRACE("module files free mbuf count = %llu\n", rls_count);
 
     return DAPP_OK;
 }

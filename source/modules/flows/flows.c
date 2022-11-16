@@ -38,6 +38,10 @@ static int dapp_flows_init(void *arg)
     return DAPP_OK;
 }
 
+static UINT64_T deq_count = 0;
+static UINT64_T enq_count = 0;
+static UINT64_T rls_count = 0;
+
 static int dapp_flows_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp flows exec\n");
@@ -54,11 +58,11 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
             continue;
         }
 
-        DAPP_TRACE("dequeue %d form ring(%s)\n", nmsg_deq, "FLOWS_RING");
+        deq_count += nmsg_deq;
 
         nmsg_enq = rte_ring_enqueue_bulk(flows_ws.flows_ring, (void **)mbuff, nmsg_deq, NULL);
 
-        if (0 == nmsg_deq) {
+        if (0 == nmsg_enq) {
 
             printf("Can not enqueue bulk to ring (%s)\n", "FLOWS_RING");
 
@@ -68,8 +72,11 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
             int i;
             for (i = 0; i < nmsg_deq; ++i) {
                 rte_pktmbuf_free(mbuff[i]);
+                rls_count++;
             }
         }
+
+        enq_count += nmsg_enq;
     }
 
     return DAPP_OK;
@@ -78,6 +85,10 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
 static int dapp_flows_exit(void *arg)
 {
     DAPP_TRACE("dapp flows exit\n");
+
+    DAPP_TRACE("module flows dequeue form ring(%s)  count = %llu\n", flows_ws.pkts_ring->name, deq_count);
+    DAPP_TRACE("module flows enqueue form ring(%s)  count = %llu\n", flows_ws.flows_ring->name, enq_count);
+    DAPP_TRACE("module flows free mbuf count = %llu\n", rls_count);
 
     return DAPP_OK;
 }

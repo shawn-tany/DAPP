@@ -2,6 +2,7 @@
 CC = gcc
 
 # binary name
+APP_PCAP_REPLAY = pcap_replay
 
 # all directory are defined in here
 ROOT_DIR ?= $(PWD)/..
@@ -26,7 +27,7 @@ TOOLS_ALL :
 	@if [ ! -d "$(TOOLS_BUILD_DIR)" ]; then mkdir $(TOOLS_BUILD_DIR); fi 
 	@if [ ! -d "$(TOOLS_BUILD_DIR)/bin" ]; then mkdir $(TOOLS_BUILD_DIR)/bin; fi
 
-	@$(CC) $(TOOLS_SRCS) $(TOOLS_LIBS) $(TOOLS_CFLAGS) -o $(TOOLS_BUILD_DIR)/bin/pcap_replay
+	@$(CC) $(TOOLS_SRCS) $(TOOLS_LIBS) $(TOOLS_CFLAGS) -o $(TOOLS_BUILD_DIR)/bin/$(APP_PCAP_REPLAY)
 	
 	@# compile
 	@echo " make finish"

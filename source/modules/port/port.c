@@ -186,6 +186,7 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
         UINT32_T nmsg_enq;
 
         RTE_ETH_FOREACH_DEV(port_id) {
+        
             /*
              * RX pkts
              */
@@ -202,6 +203,10 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
 
                 if (stats.imissed || stats.ierrors || stats.rx_nombuf) {
                     printf("dpdk rx fail! imissed = %llu ierrors = %llu rx_nombuf = %llu\n", stats.imissed, stats.ierrors, stats.rx_nombuf);
+                }
+
+                if (!rte_mempool_avail_count(port_ws.rx_mempool)) {
+                    printf("none avail in rx pktmbuf pool!\n");
                 }
                 
                 continue;
@@ -228,7 +233,7 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
                 return DAPP_OK;
             }
 
-            DAPP_TRACE("enqueue %d form ring(%s)\n", nmsg_enq, "PKTS_RING");
+            DAPP_TRACE("module port enqueue %d form ring(%s)\n", nmsg_enq, "PKTS_RING");
         }
     }
 
