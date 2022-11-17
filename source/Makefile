@@ -3,12 +3,14 @@ CC = gcc
 
 # binary name
 APP = dapp
-PACKAGE = dapp-install-package.tar.gz
+
+ifeq ($(DAPP_ROOT_PATH),)
+$(error "Please define DAPP_ROOT_PATH environment variable")
+endif
 
 # all directory are defined in here
-ROOT_DIR ?= $(PWD)/..
-SOURCE_DIR = $(ROOT_DIR)/source
-BUILD_DIR = $(ROOT_DIR)/build
+SOURCE_DIR = $(DAPP_ROOT_PATH)/source
+BUILD_DIR = $(DAPP_ROOT_PATH)/build
 
 # all source are stored in SRCS
 SRCS = $(SOURCE_DIR)/main.c
@@ -19,8 +21,9 @@ CFLAGS += -g
 CFLAGS += -D DAPP_DEBUG
 CFLAGS += -O0
 
-SOURCE_ALL :
+ALL :
 	@echo " make DAPP..."
+	
 	@# create directory
 	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
 	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
@@ -29,12 +32,12 @@ SOURCE_ALL :
 	@$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/bin/$(APP) $(LIBS)
 	@echo " make finish"
 
-source_clean :
+clean :
 	@echo " clean DAPP..."
 	@rm $(BUILD_DIR) -rf
 	@echo " clean finish"
 
-include $(ROOT_DIR)/lib/lib.mk
+include $(DAPP_ROOT_PATH)/lib/lib.mk
 include $(SOURCE_DIR)/dpdk/dpdk.mk
 include $(SOURCE_DIR)/common/common.mk
 include $(SOURCE_DIR)/config/config.mk

@@ -1,14 +1,41 @@
-ROOT_DIR = $(PWD)
+# System program installation directory
 SYS_SBIN_DIR = /usr/sbin
+
+# DAPP installation directory
 SYS_INSTALL_DIR = /etc/DAPP
-PACKAGE_DIR = $(ROOT_DIR)/package
 
-ALL : SOURCE_ALL TOOLS_ALL
+# DAPP installation package directory
+PACKAGE_DIR = $(DAPP_ROOT_PATH)/package
 
-clean : source_clean tools_clean
+# DAPP installation package
+PACKAGE = dapp-install-package.tar.gz
 
-include source/Makefile
-include tools/Makefile
+# Common variable
+# DAPP tools directory
+TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
+
+# DAPP build directory
+BUILD_DIR = $(DAPP_ROOT_PATH)/build
+
+# pcap replay tool
+APP_PCAP_REPLAY = pcap_replay
+
+# dapp binary
+APP = dapp
+
+.PHONY : clean install uninstall
+
+ifeq ($(DAPP_ROOT_PATH),)
+$(error "Please define DAPP_ROOT_PATH environment variable")
+endif
+
+ALL :
+	@make --no-print-directory -f $(DAPP_ROOT_PATH)/source/Makefile
+	@make --no-print-directory -f $(DAPP_ROOT_PATH)/tools/Makefile
+
+clean :
+	@make --no-print-directory -f source/Makefile clean
+	@make --no-print-directory -f tools/Makefile clean
 
 install :
 	@echo " install DAPP..."
@@ -21,7 +48,7 @@ install :
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/$(APP) $(PACKAGE_DIR)/bin -rf
-	@cp $(TOOLS_DIR)/build/bin/* $(PACKAGE_DIR)/tools/bin -rf
+	@cp $(BUILD_DIR)/bin/$(APP_PCAP_REPLAY) $(PACKAGE_DIR)/bin -rf
 	@cp $(TOOLS_DIR)/*.sh $(PACKAGE_DIR)/tools -rf
 	@cp $(TOOLS_DIR)/*.py $(PACKAGE_DIR)/tools -rf
 
@@ -31,12 +58,13 @@ install :
 
 	@# Install to system directory
 	@cp $(PACKAGE_DIR)/* $(SYS_INSTALL_DIR) -rf
-	@cp $(PACKAGE_DIR)/bin/$(APP) $(SYS_SBIN_DIR)
-	@cp $(PACKAGE_DIR)/tools/bin/$(APP_PCAP_REPLAY) $(SYS_SBIN_DIR)
+	@cp $(PACKAGE_DIR)/bin/$(APP) $(SYS_SBIN_DIR)/ -rf
+	@cp $(PACKAGE_DIR)/bin/$(APP_PCAP_REPLAY) $(SYS_SBIN_DIR)/ -rf
 	@echo " install finish!"
 
-unstall :
-	@echo " unstall DAPP..."
+uninstall :
+	@echo " uninstall DAPP..."
 	@rm $(SYS_INSTALL_DIR) -rf
 	@rm $(SYS_SBIN_DIR)/$(APP) -rf
-	@echo " unstall finish!"
+	@rm $(SYS_SBIN_DIR)/$(APP_PCAP_REPLAY) -rf
+	@echo " uninstall finish!"

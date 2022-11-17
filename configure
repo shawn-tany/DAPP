@@ -1,0 +1,1 @@
+export DAPP_ROOT_PATH=$(pwd)

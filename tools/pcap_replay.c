@@ -99,7 +99,7 @@ static int pcap_file_replay()
 
     printf("mempool avail count: %d\n", rte_mempool_avail_count(pcap_replay_ctx.replay_pool));
 
-    while (1) {
+    while (running) {
 
         /*
          * Step1 alloc pktmbuf bulk

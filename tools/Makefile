@@ -4,12 +4,15 @@ CC = gcc
 # binary name
 APP_PCAP_REPLAY = pcap_replay
 
-# all directory are defined in here
-ROOT_DIR ?= $(PWD)/..
-TOOLS_DIR = $(ROOT_DIR)/tools
-TOOLS_BUILD_DIR = $(TOOLS_DIR)/build
+ifeq ($(DAPP_ROOT_PATH),)
+$(error "Please define DAPP_ROOT_PATH environment variable")
+endif
 
-TOOLS_LIB_DIR = $(ROOT_DIR)/lib
+# all directory are defined in here
+TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
+BUILD_DIR = $(DAPP_ROOT_PATH)/build
+
+TOOLS_LIB_DIR = $(DAPP_ROOT_PATH)/lib
 
 # all source are stored in SRCS
 TOOLS_SRCS = $(TOOLS_DIR)/pcap_replay.c
@@ -21,18 +24,19 @@ TOOLS_LIBS += -lpthread -lnuma -ldl -march=native -lpcap
 TOOLS_CFLAGS = -I $(TOOLS_LIB_DIR)/dpdk/include
 TOOLS_CFLAGS += -g
 
-TOOLS_ALL :
+ALL :
+	@# check environment variable
 	@echo " make TOOLS..."
 	@# create directory
-	@if [ ! -d "$(TOOLS_BUILD_DIR)" ]; then mkdir $(TOOLS_BUILD_DIR); fi 
-	@if [ ! -d "$(TOOLS_BUILD_DIR)/bin" ]; then mkdir $(TOOLS_BUILD_DIR)/bin; fi
+	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
+	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
 
-	@$(CC) $(TOOLS_SRCS) $(TOOLS_LIBS) $(TOOLS_CFLAGS) -o $(TOOLS_BUILD_DIR)/bin/$(APP_PCAP_REPLAY)
+	@$(CC) $(TOOLS_SRCS) $(TOOLS_LIBS) $(TOOLS_CFLAGS) -o $(BUILD_DIR)/bin/$(APP_PCAP_REPLAY)
 	
 	@# compile
 	@echo " make finish"
 
-tools_clean :
+clean :
 	@echo " clean TOOLS..."
-	@rm $(TOOLS_BUILD_DIR) -rf
+	@rm $(BUILD_DIR) -rf
 	@echo " clean finish"

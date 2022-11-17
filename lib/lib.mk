@@ -1,4 +1,4 @@
-LIB_DIR = $(ROOT_DIR)/lib
+LIB_DIR = $(DAPP_ROOT_PATH)/lib
 
 LIB_DPDK_DIR = $(LIB_DIR)/dpdk
 LIB_JANSSON_DIR = $(LIB_DIR)/jansson
