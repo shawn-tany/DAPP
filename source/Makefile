@@ -34,7 +34,7 @@ ALL :
 
 clean :
 	@echo " clean DAPP..."
-	@rm $(BUILD_DIR) -rf
+	@rm $(BUILD_DIR)/$(APP) -rf
 	@echo " clean finish"
 
 include $(DAPP_ROOT_PATH)/lib/lib.mk

@@ -1,6 +1,3 @@
-# System program installation directory
-SYS_SBIN_DIR = /usr/sbin
-
 # DAPP installation directory
 SYS_INSTALL_DIR = /etc/DAPP
 
@@ -58,13 +55,9 @@ install :
 
 	@# Install to system directory
 	@cp $(PACKAGE_DIR)/* $(SYS_INSTALL_DIR) -rf
-	@cp $(PACKAGE_DIR)/bin/$(APP) $(SYS_SBIN_DIR)/ -rf
-	@cp $(PACKAGE_DIR)/bin/$(APP_PCAP_REPLAY) $(SYS_SBIN_DIR)/ -rf
 	@echo " install finish!"
 
 uninstall :
 	@echo " uninstall DAPP..."
 	@rm $(SYS_INSTALL_DIR) -rf
-	@rm $(SYS_SBIN_DIR)/$(APP) -rf
-	@rm $(SYS_SBIN_DIR)/$(APP_PCAP_REPLAY) -rf
 	@echo " uninstall finish!"

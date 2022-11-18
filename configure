@@ -1,1 +1,7 @@
-export DAPP_ROOT_PATH=$(pwd)
+#!/bin/bash
+
+BASH_PROFILE=~/.bash_profile
+
+prefix_path=/etc/DAPP
+
+source $BASH_PROFILE

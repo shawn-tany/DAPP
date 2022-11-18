@@ -38,5 +38,5 @@ ALL :
 
 clean :
 	@echo " clean TOOLS..."
-	@rm $(BUILD_DIR) -rf
+	@rm $(BUILD_DIR)/$(APP_PCAP_REPLAY) -rf
 	@echo " clean finish"
