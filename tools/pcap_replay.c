@@ -181,7 +181,7 @@ int pcap_replay_work(void *argv)
     if (!pcap_replay_ctx.replay_pool) {
         
         pcap_replay_ctx.replay_pool = rte_mempool_create("DAPP_PCAP_REPLAY_POOL", 102400, RTE_MBUF_DEFAULT_BUF_SIZE, 
-                                                     RTE_CACHE_LINE_SIZE, 0, NULL, NULL, 
+                                                     RTE_CACHE_LINE_SIZE, 0, rte_pktmbuf_pool_init, NULL, 
                                                      rte_pktmbuf_init, NULL, rte_socket_id(), 0);
 
         if (!pcap_replay_ctx.replay_pool) {
