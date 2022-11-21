@@ -30,12 +30,12 @@ ALL :
 	
 	@# compile
 	@$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/bin/$(APP) $(LIBS)
-	@echo " make finish"
+	@echo " make success!"
 
 clean :
 	@echo " clean DAPP..."
-	@rm $(BUILD_DIR)/$(APP) -rf
-	@echo " clean finish"
+	@rm $(BUILD_DIR)/bin/$(APP) -rf
+	@echo " clean success!"
 
 include $(DAPP_ROOT_PATH)/lib/lib.mk
 include $(SOURCE_DIR)/dpdk/dpdk.mk

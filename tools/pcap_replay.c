@@ -10,6 +10,8 @@
 #include "rte_ring.h"
 #include "rte_errno.h"
 
+#define DAPP_RING_OBJ_NUM (8)
+
 typedef unsigned char UINT8_T;
 typedef unsigned short UINT16_T;
 typedef unsigned long UINT32_T;
@@ -100,11 +102,11 @@ static int pcap_file_replay()
     printf("mempool avail count: %d\n", rte_mempool_avail_count(pcap_replay_ctx.replay_pool));
 
     while (running) {
-
+        
         /*
          * Step1 alloc pktmbuf bulk
          */
-        if (0 != (ret = rte_pktmbuf_alloc_bulk(pcap_replay_ctx.replay_pool, mbuf, 8))) {
+        if (0 != (ret = rte_pktmbuf_alloc_bulk(pcap_replay_ctx.replay_pool, mbuf, DAPP_RING_OBJ_NUM))) {
             printf("Can not alloc bulk mbuf from mempool %s! ERR : %d\n", "DAPP_PCAP_REPLAY_POOL", ret);
             break;
         }
@@ -112,8 +114,8 @@ static int pcap_file_replay()
         /*
          * Step2 fill pktmbuf bulk
          */
-        for (i = 0; i < 8; ++i) {
-            
+        for (i = 0; i < DAPP_RING_OBJ_NUM; ++i) {
+        
             const UINT8_T *pkt = pcap_next(p, &pkthdr);
 
             if (!pkt){
@@ -123,8 +125,10 @@ static int pcap_file_replay()
 
             /*
              * Fill packet
-             */
-            rte_pktmbuf_append(mbuf[i], 500);
+             */            
+            memcpy(mbuf[i]->buf_addr + mbuf[i]->data_off + mbuf[i]->data_len, pkt, pkthdr.len);
+            mbuf[i]->data_len += pkthdr.len;
+            mbuf[i]->pkt_len += pkthdr.len;
         }
 
         /*
@@ -140,7 +144,7 @@ static int pcap_file_replay()
             }
         }
 
-        enq_count += (nenq_msg + 1);
+        enq_count += nenq_msg;
         
         if (file_end) {
             printf("Pcap file parse over !\n");
@@ -149,11 +153,6 @@ static int pcap_file_replay()
     }
 
     printf("tx packet count = %llu !\n", enq_count);
-
-    while (running) {
-        printf("mempool avail count: %d\n", rte_mempool_avail_count(pcap_replay_ctx.replay_pool));
-        sleep(1);
-    }
 
     pcap_close(p);
 
@@ -182,7 +181,8 @@ int pcap_replay_work(void *argv)
     if (!pcap_replay_ctx.replay_pool) {
         
         pcap_replay_ctx.replay_pool = rte_mempool_create("DAPP_PCAP_REPLAY_POOL", 102400, RTE_MBUF_DEFAULT_BUF_SIZE, 
-                                                     RTE_CACHE_LINE_SIZE, 0, NULL, NULL, NULL, NULL, rte_socket_id(), 0);
+                                                     RTE_CACHE_LINE_SIZE, 0, NULL, NULL, 
+                                                     rte_pktmbuf_init, NULL, rte_socket_id(), 0);
 
         if (!pcap_replay_ctx.replay_pool) {
             printf("pktmbuf pool %s create fail! ERR : %s\n", "DAPP_PCAP_REPLAY_POOL",  rte_strerror(rte_errno));        

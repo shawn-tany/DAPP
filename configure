@@ -2,6 +2,6 @@
 
 BASH_PROFILE=~/.bash_profile
 
-prefix_path=/etc/DAPP
+cp package/.bash_profile $BASH_PROFILE
 
 source $BASH_PROFILE

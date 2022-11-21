@@ -4,6 +4,8 @@
 #include "rte_ring.h"
 #include "rte_mbuf.h"
 
+#define DAPP_RING_OBJ_NUM (8)
+
 typedef struct 
 {
     struct rte_ring *pkts_ring;
@@ -52,7 +54,7 @@ static int dapp_flows_exec(UINT8_T *running, void *arg)
 
     while (*running) {
 
-        nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, 8, NULL);
+        nmsg_deq = rte_ring_dequeue_bulk(flows_ws.pkts_ring, (void **)mbuff, DAPP_RING_OBJ_NUM, NULL);
 
         if (0 == nmsg_deq) {
             continue;

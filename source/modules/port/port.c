@@ -212,8 +212,6 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
                 continue;
             }
 
-            DAPP_TRACE("lcore(%d) port(%d) queue(%d) rx_pkts(%d)\n", lcore_id, port_id, rx_queue_id, npkts_rx);
-
             /*
              * forward ring
              */
@@ -232,8 +230,6 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
             
                 return DAPP_OK;
             }
-
-            DAPP_TRACE("module port enqueue %d form ring(%s)\n", nmsg_enq, "PKTS_RING");
         }
     }
 

@@ -55,9 +55,9 @@ install :
 
 	@# Install to system directory
 	@cp $(PACKAGE_DIR)/* $(SYS_INSTALL_DIR) -rf
-	@echo " install finish!"
+	@echo " install success!"
 
 uninstall :
 	@echo " uninstall DAPP..."
 	@rm $(SYS_INSTALL_DIR) -rf
-	@echo " uninstall finish!"
+	@echo " uninstall success!"

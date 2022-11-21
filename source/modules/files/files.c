@@ -11,6 +11,8 @@
 
 #define DAPP_CACHE_PATH "/etc/DAPP/cache"
 
+#define DAPP_RING_OBJ_NUM (8)
+
 typedef struct 
 {
     struct rte_ring *flows_ring;
@@ -84,7 +86,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
         
     while (*running) {
 
-        nmsg_deq = rte_ring_dequeue_bulk(files_ws.flows_ring, (void **)mbuff, 8, NULL);
+        nmsg_deq = rte_ring_dequeue_bulk(files_ws.flows_ring, (void **)mbuff, DAPP_RING_OBJ_NUM, NULL);
 
         if (0 == nmsg_deq) {
             continue;

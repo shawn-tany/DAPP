@@ -78,14 +78,14 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
                        "    -c, --config, set startup configuration file\n"
                        "    -r, --rule,   set rule configuration file\n"
                        "    -h, --help,   show optoins\n", argv[0]);
-                break;
+                exit(0);
             default :
                 printf("invalid optoin!\n");
                 printf("%s OPTIONS :\n"
                        "    -c, --config, set startup configuration file\n"
                        "    -r, --rule,   set rule configuration file\n"
                        "    -h, --help,   show optoins\n", argv[0]);
-                return DAPP_ERR_OPTION;
+                exit(1);
         }
     }
 
