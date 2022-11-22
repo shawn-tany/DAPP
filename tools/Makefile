@@ -12,11 +12,13 @@ endif
 # all directory are defined in here
 TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
 BUILD_DIR = $(DAPP_ROOT_PATH)/build
+COMMON_DIR = $(DAPP_ROOT_PATH)/source/common
 
 TOOLS_LIB_DIR = $(DAPP_ROOT_PATH)/lib
 
 # all source are stored in SRCS
 PCAP_REPLAY_SRCS = $(TOOLS_DIR)/pcap_replay.c
+PCAP_REPLAY_SRCS += $(COMMON_DIR)/dir_traval.c $(COMMON_DIR)/dapp_queue.c $(COMMON_DIR)/dapp_stack.c 
 
 HS_DB_COMPILE_SRCS = $(TOOLS_DIR)/hs_db_compile.c
 
@@ -28,6 +30,7 @@ HS_DB_COMPILE_LIBS = -L $(TOOLS_LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(TOOLS_L
 
 # all flags are stored in CFLAGS
 PCAP_REPLAY_CFLAGS = -I $(TOOLS_LIB_DIR)/dpdk/include
+PCAP_REPLAY_CFLAGS += -I $(DAPP_ROOT_PATH)/source/common
 PCAP_REPLAY_CFLAGS += -g
 
 HS_DB_COMPILE_CFLAGS = -I $(TOOLS_LIB_DIR)/hyperscan/include

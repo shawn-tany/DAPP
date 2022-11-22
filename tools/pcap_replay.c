@@ -10,6 +10,8 @@
 #include "rte_ring.h"
 #include "rte_errno.h"
 
+#include "dir_traval.h"
+
 #define DAPP_RING_OBJ_NUM (8)
 
 typedef unsigned char UINT8_T;
@@ -67,16 +69,11 @@ static int args_paser(int argc, char *argv[ ])
     return 0;
 }
 
-static int pcap_dir_replay()
-{
-    return 0;
-}
-
 static UINT64_T deq_count = 0;
 static UINT64_T enq_count = 0;
 static UINT64_T rls_count = 0;
 
-static int pcap_file_replay()
+static int pcap_file_replay(const char *path)
 {
     int ret = 0;
     int i = 0;
@@ -92,10 +89,10 @@ static int pcap_file_replay()
     /*
      * open pcap file
      */
-    p = pcap_open_offline(pcap_replay_ctx.pcap_path, err_buf);
+    p = pcap_open_offline(path, err_buf);
 
     if (!p) {
-        printf("Faild to open pcap file %s! ERR : %s\n", pcap_replay_ctx.pcap_path, err_buf);
+        printf("Faild to open pcap file %s! ERR : %s\n", path, err_buf);
         return -1;
     }
 
@@ -159,6 +156,29 @@ static int pcap_file_replay()
     return 0;
 }
 
+static int pcap_dir_replay(const char *path)
+{
+    dapp_queue_t *queue = NULL;
+    dir_node_t node;
+
+    if (dir_push(&queue, path, 10240)) {
+        printf("failed to push dir\n");
+        return -1;
+    }
+
+    while (!dir_pop(queue, &node)) {
+        if (node.is_dir) {
+            printf("replay dir %s\n", node.d_name);
+        } else {
+            printf("replay file %s\n", node.d_name);
+
+            pcap_file_replay(node.d_name);
+        }
+    }
+
+    return 0;
+}
+
 /*
  * pcap replay work
  */
@@ -191,12 +211,10 @@ int pcap_replay_work(void *argv)
     }
         
     if (pcap_replay_ctx.is_dir) {
-        pcap_dir_replay();
+        pcap_dir_replay(pcap_replay_ctx.pcap_path);
     } else {
-        pcap_file_replay();
+        pcap_file_replay(pcap_replay_ctx.pcap_path);
     }
-
-    rte_mempool_free(pcap_replay_ctx.replay_pool);
 
     return 0;
 }

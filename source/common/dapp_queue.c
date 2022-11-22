@@ -52,10 +52,16 @@ int dapp_enqueue(dapp_queue_t *queue, void *node, int size)
         return -3;
     }
 
+    if (queue->prod > queue->addr + (queue->offset * queue->total) ||
+        queue->prod + queue->offset > queue->addr + (queue->offset * queue->total)) {
+        
+        queue->prod = queue->addr;
+    }
+
     memcpy(queue->prod, node, size);
 
     queue->prod = queue->prod + queue->offset;
-
+    
     queue->avail--;
 
     return 0;
@@ -75,8 +81,14 @@ int dapp_dequeue(dapp_queue_t *queue, void *node, int size)
         return -5;
     }
 
+    if (queue->cons > queue->addr + (queue->offset * queue->total) ||
+        queue->cons + queue->offset > queue->addr + (queue->offset * queue->total)) {
+        
+        queue->prod = queue->addr;
+    }
+
     memcpy(node, queue->cons, size);
-    
+
     queue->cons = queue->cons + queue->offset;
     
     queue->avail++;

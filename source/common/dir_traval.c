@@ -5,17 +5,29 @@
 #include <sys/types.h>
 
 #include "dapp_queue.h"
+#include "dapp_stack.h"
 #include "dir_traval.h"
 
-static int dir_node_enqueue(dapp_queue_t *queue, const char *fname, int is_dir, int level)
+static int dir_node_enqueue(dapp_queue_t *queue, const char *fname, int is_dir, int depth)
 {
     dir_node_t node;
 
     snprintf(node.d_name, sizeof(node.d_name), "%s", fname);
     node.is_dir = is_dir;
-	node.level = level;
+    node.depth = depth;
 
     return dapp_enqueue(queue, &node, sizeof(node));
+}
+
+static int dir_node_enstack(dapp_stack_t *stack, const char *fname, int is_dir, int depth)
+{
+    dir_node_t node;
+
+    snprintf(node.d_name, sizeof(node.d_name), "%s", fname);
+    node.is_dir = is_dir;
+    node.depth = depth;
+
+    return dapp_enstack(stack, &node, sizeof(node));
 }
 
 int dir_push(dapp_queue_t **queue, const char *path, int file_num)
@@ -24,7 +36,7 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
         goto TRAVAL_FAILED;
     }
 
-    dapp_queue_t *dir_queue = NULL;
+    dapp_stack_t *dir_stack = NULL;
 
     dir_node_t dir_node;
 
@@ -34,9 +46,9 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
         goto TRAVAL_FAILED;
     }
 
-    dir_queue = dapp_queue_create(file_num, sizeof(dir_node));
+    dir_stack = dapp_stack_create(file_num, sizeof(dir_node_t));
 
-    if (!dir_queue) {
+    if (!dir_stack) {
         goto TRAVAL_FAILED;
     }
     
@@ -54,11 +66,11 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
         DIR *pDir = NULL;
         char f_name[256] = {0};
 
-        dir_node_enqueue(dir_queue, path, 1, 0);
+        dir_node_enstack(dir_stack, path, 1, 0);
 
-        while (!dapp_dequeue(dir_queue, &dir_node, sizeof(dir_node))) {
+        while (!dapp_destack(dir_stack, &dir_node, sizeof(dir_node))) {
 
-            dir_node_enqueue((*queue), dir_node.d_name, 1, dir_node.level);
+            dir_node_enqueue((*queue), dir_node.d_name, 1, dir_node.depth);
         
             /*
              * Open directory
@@ -76,20 +88,20 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
              */
             while ((ent = readdir(pDir)))
             {
-				if (!strncmp(ent->d_name, ".", strlen(".")) || 
-					!strncmp(ent->d_name, "..", strlen(".."))) {
-					continue;
-				}
+                if (!strncmp(ent->d_name, ".", strlen(".")) || 
+                    !strncmp(ent->d_name, "..", strlen(".."))) {
+                    continue;
+                }
 
-				snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
-					
+                snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
+
                 /*
                  * Is directory
                  */
                 if (DT_DIR == ent->d_type) {
-                    dir_node_enqueue(dir_queue, f_name, 1, dir_node.level + 1);
+                    dir_node_enstack(dir_stack, f_name, 1, dir_node.depth + 1);
                 } else {
-                    dir_node_enqueue((*queue), f_name, 0, dir_node.level + 1);
+                    dir_node_enqueue((*queue), f_name, 0, dir_node.depth + 1);
                 }
             }
         }
@@ -97,13 +109,13 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
 
 TRAVAL_SUCCESS :
 
-    dapp_queue_free(dir_queue);
+    dapp_stack_free(dir_stack);
 
     return 0;
 
 TRAVAL_FAILED :
 
-    dapp_queue_free(dir_queue);
+    dapp_stack_free(dir_stack);
     dapp_queue_free((*queue));
 
     *queue = NULL;
@@ -117,9 +129,11 @@ int dir_pop(dapp_queue_t *queue, dir_node_t *node)
         return -1;
     }
 
-	if (queue->avail == queue->total) {
+    if (queue->avail == queue->total) {
+        
         dapp_queue_free(queue);
-		return 1;
+        
+        return 1;
     }
 
     dapp_dequeue(queue, node, sizeof(*node));
@@ -127,6 +141,7 @@ int dir_pop(dapp_queue_t *queue, dir_node_t *node)
     return 0;
 }
 
+#if 0
 int main(int argc, char *argv[ ])
 {
     char *path = argv[1];
@@ -139,18 +154,19 @@ int main(int argc, char *argv[ ])
     }
 
     dir_node_t node;
-	int i;
+    int i;
 
     while (!dir_pop(queue, &node)) {
 
-		for (i = 0; i < node.level; ++i) {
-			printf("    ");
-		}
-	
+        for (i = 0; i < node.depth; ++i) {
+            printf("    ");
+        }
+
         if (!node.is_dir) {
-            printf("file : %s\n", node.d_name);
+            printf("-%s\n", node.d_name);
         } else {
-            printf("dir : %s\n", node.d_name);
+            printf("+%s\n", node.d_name);
         }
     }
 }
+#endif
