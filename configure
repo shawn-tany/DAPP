@@ -1,7 +1,64 @@
 #!/bin/bash
 
-BASH_PROFILE=~/.bash_profile
+USER_BASH_PROFILE=package/.bash_profile
 
-cp package/.bash_profile $BASH_PROFILE
+DAPP_ROOT_PATH=$(pwd)
+DAPP_INSTALL_PATH=/etc/DAPP
+DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/bin:$DAPP_INSTALL_PATH/tools
 
-source $BASH_PROFILE
+# file exist
+if [[ -f $USER_BASH_PROFILE ]];
+	then
+
+	# root path
+	root_path=`sed -n '/^DAPP_ROOT_PATH=/p' $USER_BASH_PROFILE`;
+	if [[ $root_path ]];
+		then
+		echo "change dapp root path $DAPP_ROOT_PATH ..."
+		sed -e 's!^DAPP_ROOT_PATH=.*!DAPP_ROOT_PATH='"${DAPP_ROOT_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+	else
+		echo "add dapp root path ..."
+		sed -i "\$a DAPP_ROOT_PATH=${DAPP_ROOT_PATH}" $USER_BASH_PROFILE;
+	fi;
+
+	# export root
+	exp_root=`sed -n '/^export DAPP_ROOT_PATH/p' $USER_BASH_PROFILE`;
+	if [[ ! $exp_root ]];
+		then
+		echo "export dapp root path ..."
+		sed -i "\$a export DAPP_ROOT_PATH" $USER_BASH_PROFILE;
+	fi;
+
+	# install path
+	install_path=`sed -n '/^DAPP_INSTALL_PATH=/p' $USER_BASH_PROFILE`;
+	if [[ $install_path ]];
+		then
+		echo "change dapp install path ..."
+		sed -e 's!^DAPP_INSTALL_PATH=.*!DAPP_INSTALL_PATH='"${DAPP_INSTALL_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+	else
+		echo "add dapp install path ..."
+		sed -i "\$a DAPP_INSTALL_PATH=${DAPP_INSTALL_PATH}" $USER_BASH_PROFILE;
+	fi;
+
+	# running path
+	running_path=`sed -n '/^DAPP_RUNNING_PATH=/p' $USER_BASH_PROFILE`;
+	if [[ $running_path ]];
+		then
+		echo "change dapp running path ..."
+		sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+	else
+		echo "add dapp running path ..."
+		sed -i "\$a DAPP_RUNNING_PATH=\${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
+	fi;
+
+	# export runing path
+	exp_running_path=`sed -n '/^PATH=\$PATH:\$DAPP_RUNNING_PATH/p' $USER_BASH_PROFILE`;
+	if [[ ! $exp_running_path ]];
+		then
+		echo "export dapp running path"
+		sed -i "\$a PATH=\$PATH:\$DAPP_RUNNING_PATH" $USER_BASH_PROFILE;
+		sed -i "\$a export PATH" $USER_BASH_PROFILE;
+	fi;
+fi;
+
+source $USER_BASH_PROFILE

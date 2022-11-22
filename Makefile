@@ -14,12 +14,6 @@ TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
 # DAPP build directory
 BUILD_DIR = $(DAPP_ROOT_PATH)/build
 
-# pcap replay tool
-APP_PCAP_REPLAY = pcap_replay
-
-# dapp binary
-APP = dapp
-
 .PHONY : clean install uninstall
 
 ifeq ($(DAPP_ROOT_PATH),)
@@ -44,8 +38,7 @@ install :
 	@if [ ! -d "$(PACKAGE_DIR)/tools/bin" ]; then mkdir $(PACKAGE_DIR)/tools/bin; fi
 
 	@# update package
-	@cp $(BUILD_DIR)/bin/$(APP) $(PACKAGE_DIR)/bin -rf
-	@cp $(BUILD_DIR)/bin/$(APP_PCAP_REPLAY) $(PACKAGE_DIR)/bin -rf
+	@cp $(BUILD_DIR)/bin/* $(PACKAGE_DIR)/bin -rf
 	@cp $(TOOLS_DIR)/*.sh $(PACKAGE_DIR)/tools -rf
 	@cp $(TOOLS_DIR)/*.py $(PACKAGE_DIR)/tools -rf
 

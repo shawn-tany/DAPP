@@ -10,7 +10,7 @@
 #include "rte_ring.h"
 #include "rte_errno.h"
 
-#include "dir_traval.h"
+#include "dapp_dir_traval.h"
 
 #define DAPP_RING_OBJ_NUM (8)
 
