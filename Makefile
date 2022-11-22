@@ -1,6 +1,3 @@
-# DAPP installation directory
-SYS_INSTALL_DIR = /etc/DAPP
-
 # DAPP installation package directory
 PACKAGE_DIR = $(DAPP_ROOT_PATH)/package
 
@@ -20,6 +17,10 @@ ifeq ($(DAPP_ROOT_PATH),)
 $(error "Please define DAPP_ROOT_PATH environment variable")
 endif
 
+ifeq ($(DAPP_INSTALL_PATH),)
+$(error "Please define DAPP_INSTALL_PATH environment variable")
+endif
+
 ALL :
 	@make --no-print-directory -f $(DAPP_ROOT_PATH)/source/Makefile
 	@make --no-print-directory -f $(DAPP_ROOT_PATH)/tools/Makefile
@@ -30,8 +31,8 @@ clean :
 
 install :
 	@echo " install DAPP..."
-	@if [ ! -d "$(SYS_INSTALL_DIR)" ]; then mkdir $(SYS_INSTALL_DIR); fi
-	@if [ ! -d "$(SYS_INSTALL_DIR)/cache" ]; then mkdir $(SYS_INSTALL_DIR)/cache; fi
+	@if [ ! -d "$(DAPP_INSTALL_PATH)" ]; then mkdir $(DAPP_INSTALL_PATH); fi
+	@if [ ! -d "$(DAPP_INSTALL_PATH)/cache" ]; then mkdir $(DAPP_INSTALL_PATH)/cache; fi
 	@if [ ! -d "$(PACKAGE_DIR)" ]; then mkdir $(PACKAGE_DIR); fi
 	@if [ ! -d "$(PACKAGE_DIR)/bin" ]; then mkdir $(PACKAGE_DIR)/bin; fi
 	@if [ ! -d "$(PACKAGE_DIR)/tools" ]; then mkdir $(PACKAGE_DIR)/tools; fi
@@ -47,10 +48,10 @@ install :
 	@tar -zcPf $(PACKAGE_DIR)/$(PACKAGE) $(PACKAGE_DIR)/*
 
 	@# Install to system directory
-	@cp $(PACKAGE_DIR)/* $(SYS_INSTALL_DIR) -rf
+	@cp $(PACKAGE_DIR)/* $(DAPP_INSTALL_PATH) -rf
 	@echo " install success!"
 
 uninstall :
 	@echo " uninstall DAPP..."
-	@rm $(SYS_INSTALL_DIR) -rf
+	@rm $(DAPP_INSTALL_PATH) -rf
 	@echo " uninstall success!"

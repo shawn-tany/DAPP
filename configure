@@ -1,9 +1,9 @@
 #!/bin/bash
 
-USER_BASH_PROFILE=package/.bash_profile
+USER_BASH_PROFILE=~/.bash_profile
 
 DAPP_ROOT_PATH=$(pwd)
-DAPP_INSTALL_PATH=/etc/DAPP
+DAPP_INSTALL_PATH=/home/dapp
 DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/bin:$DAPP_INSTALL_PATH/tools
 
 # file exist
@@ -14,10 +14,10 @@ if [[ -f $USER_BASH_PROFILE ]];
 	root_path=`sed -n '/^DAPP_ROOT_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $root_path ]];
 		then
-		echo "change dapp root path $DAPP_ROOT_PATH ..."
+		echo "change dapp root path $DAPP_ROOT_PATH"
 		sed -e 's!^DAPP_ROOT_PATH=.*!DAPP_ROOT_PATH='"${DAPP_ROOT_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp root path ..."
+		echo "add dapp root path $DAPP_ROOT_PATH"
 		sed -i "\$a DAPP_ROOT_PATH=${DAPP_ROOT_PATH}" $USER_BASH_PROFILE;
 	fi;
 
@@ -25,7 +25,7 @@ if [[ -f $USER_BASH_PROFILE ]];
 	exp_root=`sed -n '/^export DAPP_ROOT_PATH/p' $USER_BASH_PROFILE`;
 	if [[ ! $exp_root ]];
 		then
-		echo "export dapp root path ..."
+		echo "export dapp root path $DAPP_ROOT_PATH"
 		sed -i "\$a export DAPP_ROOT_PATH" $USER_BASH_PROFILE;
 	fi;
 
@@ -33,21 +33,29 @@ if [[ -f $USER_BASH_PROFILE ]];
 	install_path=`sed -n '/^DAPP_INSTALL_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $install_path ]];
 		then
-		echo "change dapp install path ..."
+		echo "change dapp install path $DAPP_INSTALL_PATH"
 		sed -e 's!^DAPP_INSTALL_PATH=.*!DAPP_INSTALL_PATH='"${DAPP_INSTALL_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp install path ..."
+		echo "add dapp install path $DAPP_INSTALL_PATH"
 		sed -i "\$a DAPP_INSTALL_PATH=${DAPP_INSTALL_PATH}" $USER_BASH_PROFILE;
+	fi;
+
+	# export install
+	exp_root=`sed -n '/^export DAPP_INSTALL_PATH/p' $USER_BASH_PROFILE`;
+	if [[ ! $exp_root ]];
+		then
+		echo "export dapp install path $DAPP_INSTALL_PATH"
+		sed -i "\$a export DAPP_INSTALL_PATH" $USER_BASH_PROFILE;
 	fi;
 
 	# running path
 	running_path=`sed -n '/^DAPP_RUNNING_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $running_path ]];
 		then
-		echo "change dapp running path ..."
+		echo "change dapp running path $DAPP_RUNNING_PATH"
 		sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp running path ..."
+		echo "add dapp running path $DAPP_RUNNING_PATH"
 		sed -i "\$a DAPP_RUNNING_PATH=\${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
 	fi;
 
@@ -55,7 +63,7 @@ if [[ -f $USER_BASH_PROFILE ]];
 	exp_running_path=`sed -n '/^PATH=\$PATH:\$DAPP_RUNNING_PATH/p' $USER_BASH_PROFILE`;
 	if [[ ! $exp_running_path ]];
 		then
-		echo "export dapp running path"
+		echo "export dapp running path $DAPP_RUNNING_PATH"
 		sed -i "\$a PATH=\$PATH:\$DAPP_RUNNING_PATH" $USER_BASH_PROFILE;
 		sed -i "\$a export PATH" $USER_BASH_PROFILE;
 	fi;
