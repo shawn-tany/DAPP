@@ -14,10 +14,10 @@ if [[ -f $USER_BASH_PROFILE ]];
 	root_path=`sed -n '/^DAPP_ROOT_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $root_path ]];
 		then
-		echo "change dapp root path $DAPP_ROOT_PATH"
+		echo "update dapp root path $DAPP_ROOT_PATH"
 		sed -e 's!^DAPP_ROOT_PATH=.*!DAPP_ROOT_PATH='"${DAPP_ROOT_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp root path $DAPP_ROOT_PATH"
+		echo "increase dapp root path $DAPP_ROOT_PATH"
 		sed -i "\$a DAPP_ROOT_PATH=${DAPP_ROOT_PATH}" $USER_BASH_PROFILE;
 	fi;
 
@@ -33,10 +33,10 @@ if [[ -f $USER_BASH_PROFILE ]];
 	install_path=`sed -n '/^DAPP_INSTALL_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $install_path ]];
 		then
-		echo "change dapp install path $DAPP_INSTALL_PATH"
+		echo "update dapp install path $DAPP_INSTALL_PATH"
 		sed -e 's!^DAPP_INSTALL_PATH=.*!DAPP_INSTALL_PATH='"${DAPP_INSTALL_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp install path $DAPP_INSTALL_PATH"
+		echo "increase dapp install path $DAPP_INSTALL_PATH"
 		sed -i "\$a DAPP_INSTALL_PATH=${DAPP_INSTALL_PATH}" $USER_BASH_PROFILE;
 	fi;
 
@@ -52,10 +52,10 @@ if [[ -f $USER_BASH_PROFILE ]];
 	running_path=`sed -n '/^DAPP_RUNNING_PATH=/p' $USER_BASH_PROFILE`;
 	if [[ $running_path ]];
 		then
-		echo "change dapp running path $DAPP_RUNNING_PATH"
+		echo "update dapp running path $DAPP_RUNNING_PATH"
 		sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 	else
-		echo "add dapp running path $DAPP_RUNNING_PATH"
+		echo "increase dapp running path $DAPP_RUNNING_PATH"
 		sed -i "\$a DAPP_RUNNING_PATH=\${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
 	fi;
 

@@ -84,7 +84,7 @@ int dapp_dequeue(dapp_queue_t *queue, void *node, int size)
     if (queue->cons > queue->addr + (queue->offset * queue->total) ||
         queue->cons + queue->offset > queue->addr + (queue->offset * queue->total)) {
         
-        queue->prod = queue->addr;
+        queue->cons = queue->addr;
     }
 
     memcpy(node, queue->cons, size);
@@ -126,16 +126,42 @@ int main()
     }
 
     int i;
+    int node;
+    int idex = 0;
 
-    for (i = 0; i < 100; ++i) {
+    int start = 0;
+    
+    int loop = start + 50;
+    for (i = start; i < loop; ++i, start++) {
         if (dapp_enqueue(queue, &i, sizeof(i))) {
             printf("failed to enqueue\n");
             goto FAIL;
         }
     }
+    
+    while (!dapp_dequeue(queue, &node, sizeof(node))) {
+        printf("dequeue[%d] : %d\n", ++idex, node);
+    }
 
-    int node;
-    int idex = 0;
+    loop = start + 100;
+    for (i = start; i < loop; ++i, start++) {
+        if (dapp_enqueue(queue, &i, sizeof(i))) {
+            printf("failed to enqueue\n");
+            goto FAIL;
+        }
+    }
+    
+    while (!dapp_dequeue(queue, &node, sizeof(node))) {
+        printf("dequeue[%d] : %d\n", ++idex, node);
+    }
+
+    loop = start + 100;
+    for (i = start; i < loop; ++i, start++) {
+        if (dapp_enqueue(queue, &i, sizeof(i))) {
+            printf("failed to enqueue\n");
+            goto FAIL;
+        }
+    }
     
     while (!dapp_dequeue(queue, &node, sizeof(node))) {
         printf("dequeue[%d] : %d\n", ++idex, node);

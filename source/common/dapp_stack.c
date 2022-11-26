@@ -126,17 +126,44 @@ int main()
     }
 
     int i;
+    int node;
+    int idex = 0;
 
-    for (i = 0; i < 100; ++i) {
+    int start = 0;
+    int loop = 0;
+
+    loop = start + 50;
+    for (i = start; i < loop; ++i, ++start) {
         if (dapp_enstack(stack, &i, sizeof(i))) {
             printf("failed to enstack\n");
             goto FAIL;
         }
     }
 
-    int node;
-    int idex = 0;
-    
+    while (!dapp_destack(stack, &node, sizeof(node))) {
+        printf("destack[%d] : %d\n", idex++, node);
+    }
+
+    loop = start + 100;
+    for (i = start; i < loop; ++i, ++start) {
+        if (dapp_enstack(stack, &i, sizeof(i))) {
+            printf("failed to enstack\n");
+            goto FAIL;
+        }
+    }
+
+    while (!dapp_destack(stack, &node, sizeof(node))) {
+        printf("destack[%d] : %d\n", idex++, node);
+    }
+
+    loop = start + 100;
+    for (i = start; i < loop; ++i, ++start) {
+        if (dapp_enstack(stack, &i, sizeof(i))) {
+            printf("failed to enstack\n");
+            goto FAIL;
+        }
+    }
+
     while (!dapp_destack(stack, &node, sizeof(node))) {
         printf("destack[%d] : %d\n", idex++, node);
     }
