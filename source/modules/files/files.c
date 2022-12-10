@@ -20,27 +20,29 @@ typedef struct
 
 static dapp_files_ws_t files_ws;
 
-static pcap_dumper_t *dumper = NULL;
-
-static void dapp_pcap_open(void)
+static pcap_dumper_t *dapp_pcap_open(void)
 {
+    pcap_dumper_t *dumper = NULL;
+
     char filename[256] = {0};
     
-    if (NULL == dumper)
-    {    
-        snprintf(filename, sizeof(filename), "%s/dapp.pcap", DAPP_CACHE_PATH);
+    snprintf(filename, sizeof(filename), "%s/dapp.pcap", DAPP_CACHE_PATH);
 
-        dumper = pcap_dump_open(pcap_open_dead(DLT_EN10MB, 1600), filename);
-        if (NULL == dumper)
-        {
-            printf("dumper is NULL\n");
-            return;
-        }
+    dumper = pcap_dump_open(pcap_open_dead(DLT_EN10MB, 1600), filename);
+    if (NULL == dumper)
+    {
+        return NULL;
     }
+
+    return dumper;
 }
 
-static void dapp_pcap_dump(UINT8_T *data, UINT32_T size)
+static int dapp_pcap_dump(pcap_dumper_t *dumper, UINT8_T *data, UINT32_T size)
 {
+    if (!dumper || !data) {
+        return -1;
+    }
+
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
@@ -51,6 +53,15 @@ static void dapp_pcap_dump(UINT8_T *data, UINT32_T size)
     hdr.len = size; 
 
     pcap_dump((UINT8_T *)dumper, &hdr, data);
+
+    return 0;
+}
+
+static void dapp_pcap_close(pcap_dumper_t *dumper)
+{
+    if (dumper) {
+        pcap_dump_close(dumper);
+    }
 }
 
 static int dapp_files_init(void *arg)
@@ -78,12 +89,16 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
     UINT32_T nmsg_deq;
     struct rte_mbuf *mbuff[8];
     char *pktbuf;
+    pcap_dumper_t *dumper = NULL;
 
     /*
      * Open pcap file
      */  
-    dapp_pcap_open();
-        
+    if (!(dumper = dapp_pcap_open())) {
+        printf("dumper is NULL\n");
+        return -1;
+    }
+    
     while (*running) {
 
         nmsg_deq = rte_ring_dequeue_bulk(files_ws.flows_ring, (void **)mbuff, DAPP_RING_OBJ_NUM, NULL);
@@ -106,13 +121,18 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
                 continue;
             }
 
-            dapp_pcap_dump(pktbuf, mbuff[i]->data_len);
+            if (0 != dapp_pcap_dump(dumper, pktbuf, mbuff[i]->data_len)) {
+                printf("pcap dump fail\n");
+                return -1;
+            }
         
             rte_pktmbuf_free(mbuff[i]);
 
             rls_count++;
         }
     }
+
+    dapp_pcap_close(dumper);
 
     return DAPP_OK;
 }

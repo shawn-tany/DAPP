@@ -11,8 +11,8 @@
 #include "dapp_code.h"
 #include "modules.h"
 
-#define CONF_FILE "/etc/DAPP/config/startup.conf"
-#define RULE_FILE "/etc/DAPP/config/rule.conf"
+#define CONF_FILE "/home/dapp/config/startup.conf"
+#define RULE_FILE "/home/dapp/config/rule.conf"
 
 #define CONF_FILE_NAME_SIZE (256)
 
