@@ -11,7 +11,7 @@ TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
 # DAPP build directory
 BUILD_DIR = $(DAPP_ROOT_PATH)/build
 
-.PHONY : clean install uninstall
+.PHONY : ALL clean install uninstall
 
 ifeq ($(DAPP_ROOT_PATH),)
 $(error "Please define DAPP_ROOT_PATH environment variable")
@@ -31,12 +31,12 @@ clean :
 
 install :
 	@echo " install DAPP..."
+	@if [ -d "$(DAPP_INSTALL_PATH_OLD)" ]; then rm $(DAPP_INSTALL_PATH_OLD) -rf; fi
 	@if [ ! -d "$(DAPP_INSTALL_PATH)" ]; then mkdir $(DAPP_INSTALL_PATH); fi
 	@if [ ! -d "$(DAPP_INSTALL_PATH)/cache" ]; then mkdir $(DAPP_INSTALL_PATH)/cache; fi
 	@if [ ! -d "$(PACKAGE_DIR)" ]; then mkdir $(PACKAGE_DIR); fi
 	@if [ ! -d "$(PACKAGE_DIR)/bin" ]; then mkdir $(PACKAGE_DIR)/bin; fi
 	@if [ ! -d "$(PACKAGE_DIR)/tools" ]; then mkdir $(PACKAGE_DIR)/tools; fi
-	@if [ ! -d "$(PACKAGE_DIR)/tools/bin" ]; then mkdir $(PACKAGE_DIR)/tools/bin; fi
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/* $(PACKAGE_DIR)/bin -rf
@@ -53,5 +53,5 @@ install :
 
 uninstall :
 	@echo " uninstall DAPP..."
-	@rm $(DAPP_INSTALL_PATH) -rf
+	@if [ -d "$(DAPP_INSTALL_PATH)" ]; then rm $(DAPP_INSTALL_PATH) -rf; fi
 	@echo " uninstall success!"

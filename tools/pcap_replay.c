@@ -41,14 +41,27 @@ static struct option long_options[] = {
     {"core",    1,  0,  'c' },
     {"dir",     1,  0,  'd' },
     {"file",    1,  0,  'f' },
+    {"help",    0,  0,  'h' },
     {0,         0,  0,  0 }
 };
+
+static void pcap_replay_options_print(char *program)
+{
+    printf("%s OPTIONS :\n"
+           "    -c, --core, set core num\n"
+           "    -d, --dir,  select a replay directory\n"
+           "    -f, --file, select a replay file\n"
+           "    -h, --help, show %s options\n", 
+           program, program);
+}
 
 static int args_paser(int argc, char *argv[ ])
 {
     int opt = 0;
 
-    while (-1 != (opt = getopt_long(argc, argv, "c:d:f:", long_options, NULL))) {
+    pcap_replay_ctx.core_num = 1;
+
+    while (-1 != (opt = getopt_long(argc, argv, "c:d:f:h", long_options, NULL))) {
         switch (opt) {
             case 'c' :
                 pcap_replay_ctx.core_num = atoi(optarg);
@@ -61,12 +74,32 @@ static int args_paser(int argc, char *argv[ ])
                 snprintf(pcap_replay_ctx.pcap_path, sizeof(pcap_replay_ctx.pcap_path), "%s", strdup(optarg));
                 pcap_replay_ctx.is_dir = 0;
                 break;
+            case 'h' :
+                pcap_replay_options_print(argv[0]);
+                break;
             default :
+                printf("invalid options\n");
+                pcap_replay_options_print(argv[0]);
                 return -1;
         }
     }
 
     return 0;
+}
+
+static int args_check(void)
+{
+    if (!pcap_replay_ctx.core_num) {
+        printf("invalid core num = %d\n", pcap_replay_ctx.core_num);
+        return 0;
+    }
+
+    if (!strlen(pcap_replay_ctx.pcap_path)) {
+        printf("please select a directory or file\n");
+        return 0;
+    }
+
+    return 1;
 }
 
 static UINT64_T deq_count = 0;
@@ -222,6 +255,10 @@ int pcap_replay_work(void *argv)
 int main(int argc, char *argv[ ])
 {
     if (0 != args_paser(argc, argv)) {
+        return -1;
+    }
+
+    if (!args_check()) {
         return -1;
     }
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "jansson.h"
-#include "config.h"
+#include "startup_conf.h"
 
 static STATUS dapp_port_conf_parse(dapp_conf_t *conf, json_t *port)
 {

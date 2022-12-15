@@ -9,7 +9,7 @@
 
 #define MAX_FILE_SIZE (1024 * 1024 * 256)
 
-#define DAPP_CACHE_PATH "/etc/DAPP/cache"
+#define DAPP_DAFAULT_CACHE_PATH "/home/dapp/cache"
 
 #define DAPP_RING_OBJ_NUM (8)
 
@@ -24,12 +24,23 @@ static pcap_dumper_t *dapp_pcap_open(void)
 {
     pcap_dumper_t *dumper = NULL;
 
+    char cachepath[256] = {0};
     char filename[256] = {0};
     
-    snprintf(filename, sizeof(filename), "%s/dapp.pcap", DAPP_CACHE_PATH);
+#ifdef DAPP_CACHE_PATH
+    snprintf(cachepath, sizeof(cachepath), "%s", DAPP_CACHE_PATH);
+#else
+    snprintf(cachepath, sizeof(cachepath), "%s/%s", DAPP_DAFAULT_CACHE_PATH);
+#endif
+    
+    DAPP_TRACE("dapp cache : %s\n", cachepath);
+
+    snprintf(filename, sizeof(filename), "%s/dapp.pcap", cachepath);
+
+    DAPP_TRACE("dapp pcap dumper open : %s\n", filename);
 
     dumper = pcap_dump_open(pcap_open_dead(DLT_EN10MB, 1600), filename);
-    if (NULL == dumper)
+    if (!dumper)
     {
         return NULL;
     }
@@ -71,7 +82,7 @@ static int dapp_files_init(void *arg)
     files_ws.flows_ring = rte_ring_lookup("FLOWS_RING");
 
     if (!files_ws.flows_ring) {
-        printf("Can not find ring %s!\n", "FLOWS_RING");
+        printf("ERROR : Can not find ring %s!\n", "FLOWS_RING");
         return DAPP_FAIL;
     }
 
@@ -95,7 +106,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
      * Open pcap file
      */  
     if (!(dumper = dapp_pcap_open())) {
-        printf("dumper is NULL\n");
+        printf("ERROR : dumper is NULL\n");
         return -1;
     }
     
@@ -122,7 +133,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
             }
 
             if (0 != dapp_pcap_dump(dumper, pktbuf, mbuff[i]->data_len)) {
-                printf("pcap dump fail\n");
+                printf("ERROR : pcap dump fail\n");
                 return -1;
             }
         

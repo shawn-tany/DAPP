@@ -44,7 +44,7 @@ static int dapp_port_init(void *arg)
     port_ws.pkts_ring = rte_ring_create("PKTS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
 
     if (!port_ws.pkts_ring) {
-        printf("ring %s create fail! ERR : %s\n", "PKTS_RING", rte_strerror(rte_errno));
+        printf("ERROR : ring %s create fail! ERR : %s\n", "PKTS_RING", rte_strerror(rte_errno));
         return DAPP_FAIL;
     }
 
@@ -54,7 +54,7 @@ static int dapp_port_init(void *arg)
     UINT16_T n_ports = rte_eth_dev_count_avail();
 
     if (0 == n_ports) {
-        printf("No ethernet device avalible!\n");
+        printf("WARNING : No ethernet device avalible!\n");
         return DAPP_OK;
     }
     
@@ -64,7 +64,7 @@ static int dapp_port_init(void *arg)
     port_ws.rx_mempool = rte_pktmbuf_pool_create("DAPP_RX_MPOOL", 102400, RTE_CACHE_LINE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
 
     if (!port_ws.rx_mempool) {
-        printf("pktmbuf pool %s create fail! ERR : %s\n", "DAPP_RX_MPOOL", rte_strerror(rte_errno));
+        printf("ERROR : pktmbuf pool %s create fail! ERR : %s\n", "DAPP_RX_MPOOL", rte_strerror(rte_errno));
         return DAPP_FAIL;
     }
 
@@ -83,7 +83,7 @@ static int dapp_port_init(void *arg)
         ret = rte_eth_dev_info_get(port_id, &dev_info);
 
         if (0 != ret) {
-            printf("Can not get ethernet device info! ERR : %s\n", rte_strerror(ret));
+            printf("ERROR : Can not get ethernet device info! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
 
@@ -102,7 +102,7 @@ static int dapp_port_init(void *arg)
         ret = rte_eth_dev_configure(port_id, port_ws.n_rx_queue, port_ws.n_tx_queue, &dev_conf_default);
 
         if (0 != ret) {
-            printf("Can not configure device! ERR : %s\n", rte_strerror(ret));
+            printf("ERROR : Can not configure device! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
         
@@ -114,7 +114,7 @@ static int dapp_port_init(void *arg)
             ret = rte_eth_rx_queue_setup(port_id, queue_id, 128, rte_eth_dev_socket_id(port_id), NULL, port_ws.rx_mempool);
 
             if (0 != ret) {
-                printf("Can not setup rx queue(%d)! ERR : %s\n", queue_id, rte_strerror(ret));
+                printf("ERROR : Can not setup rx queue(%d)! ERR : %s\n", queue_id, rte_strerror(ret));
                 return DAPP_FAIL;
             }
         }
@@ -126,7 +126,7 @@ static int dapp_port_init(void *arg)
             ret = rte_eth_tx_queue_setup(port_id, queue_id, 128, rte_eth_dev_socket_id(port_id), NULL);
 
             if (0 != ret) {
-                printf("Can not setup tx queue! ERR : %s\n", rte_strerror(ret));
+                printf("ERROR : Can not setup tx queue! ERR : %s\n", rte_strerror(ret));
                 return DAPP_FAIL;
             }
         }
@@ -142,7 +142,7 @@ static int dapp_port_init(void *arg)
         ret = rte_eth_promiscuous_enable(port_id);
 
         if (0 != ret) {
-            printf("Can not enable promiscuous mode! ERR : %s\n", rte_strerror(ret));
+            printf("ERROR : Can not enable promiscuous mode! ERR : %s\n", rte_strerror(ret));
             return DAPP_FAIL;
         }
 
@@ -197,16 +197,16 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
                 struct rte_eth_stats stats;
                 
                 if (0 > (ret = rte_eth_stats_get(port_id, &stats))) {
-                    printf("Can not get ethernet device info! ERR : %d\n", ret);
+                    printf("ERROR : Can not get ethernet device info! ERR : %d\n", ret);
                     return -1;
                 }
 
                 if (stats.imissed || stats.ierrors || stats.rx_nombuf) {
-                    printf("dpdk rx fail! imissed = %llu ierrors = %llu rx_nombuf = %llu\n", stats.imissed, stats.ierrors, stats.rx_nombuf);
+                    printf("WARNING : dpdk rx fail! imissed = %llu ierrors = %llu rx_nombuf = %llu\n", stats.imissed, stats.ierrors, stats.rx_nombuf);
                 }
 
                 if (!rte_mempool_avail_count(port_ws.rx_mempool)) {
-                    printf("none avail in rx pktmbuf pool!\n");
+                    printf("WARNING : none avail in rx pktmbuf pool!\n");
                 }
                 
                 continue;
@@ -218,7 +218,7 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
             nmsg_enq = rte_ring_enqueue_bulk(port_ws.pkts_ring, (void **)mbuff, npkts_rx, NULL);
             
             if (0 == nmsg_enq) {
-                printf("Can not enqueue bulk to ring (%s)\n", "PKTS_RING");
+                printf("ERROR : Can not enqueue bulk to ring (%s)\n", "PKTS_RING");
 
                 /*
                  * Release pkt mbuf

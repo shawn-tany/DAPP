@@ -1,6 +1,8 @@
 #ifndef __DAPP_STATISTICS__
 #define __DAPP_STATISTICS__
 
+#include "common.h"
+
 #define DAPP_CORE_NUM (64)
 
 typedef struct {
@@ -11,6 +13,7 @@ typedef struct {
 typedef struct {
     dapp_port_statistic_t rx[DAPP_CORE_NUM];
     dapp_port_statistic_t tx[DAPP_CORE_NUM];
+    dapp_port_statistic_t free[DAPP_CORE_NUM];
 } dapp_port_statistics_t;
 
 #endif

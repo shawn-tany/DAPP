@@ -315,7 +315,7 @@ void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rel
     }
 
     if (MODULES.module[type].rely.rely_num != rely_num) {
-        printf("exist unknow module type\n");
+        printf("WARNING : exist unknow module type\n");
     }
 
     va_end(valist);

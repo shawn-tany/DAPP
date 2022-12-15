@@ -6,13 +6,14 @@
 #include <signal.h>
 
 #include "common.h"
-#include "config.h"
+#include "startup_conf.h"
 #include "dpdk.h"
 #include "dapp_code.h"
 #include "modules.h"
 
-#define CONF_FILE "/home/dapp/config/startup.conf"
-#define RULE_FILE "/home/dapp/config/rule.conf"
+#define DAPP_DEFAULT_INSTALL_PATH "/home/dapp"
+#define DAPP_CONF_FILE "startup.conf"
+#define DAPP_RULE_FILE "rule.conf"
 
 #define CONF_FILE_NAME_SIZE (256)
 
@@ -59,8 +60,13 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     /*
      * Set default parameters
      */
-    snprintf(conf_file, sizeof(conf_file), "%s", CONF_FILE);
-    snprintf(rule_file, sizeof(rule_file), "%s", RULE_FILE);
+#ifdef DAPP_CONFIG_PATH
+    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_CONF_FILE);
+    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_RULE_FILE);
+#else
+    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_DEFAULT_INSTALL_PATH, DAPP_CONF_FILE);
+    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_DEFAULT_INSTALL_PATH, DAPP_RULE_FILE);
+#endif
 
     /*
      * Parse command line parameters
@@ -93,12 +99,14 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
      * program 
      */
     snprintf(usrspace->program, sizeof(usrspace->program), "%s", argv[0]);
+
+    printf("working config : %s\n", conf_file);
     
     /*
      * resolve startup configuration
      */
     if (DAPP_OK != (ret = dapp_conf_parse(&usrspace->conf, conf_file))) {
-        printf("dapp conf parse fail\n");
+        printf("ERROR : dapp conf parse fail\n");
         return ret;
     }
 
@@ -196,7 +204,7 @@ static int dapp_work(void *arg)
     ret = DAPP_MODL_INIT_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
-        DAPP_TRACE("module %d init fail! ERR : %d\n", type, ret);
+        DAPP_TRACE("ERROR : module %d init fail! ERR : %d\n", type, ret);
         return DAPP_FAIL;
     }
 
@@ -206,7 +214,7 @@ static int dapp_work(void *arg)
     ret = DAPP_MODL_EXEC_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
-        DAPP_TRACE("module %d exec fail! ERR : %d\n", type, ret);
+        DAPP_TRACE("ERROR : module %d exec fail! ERR : %d\n", type, ret);
        return DAPP_FAIL;
     }
 
@@ -216,7 +224,7 @@ static int dapp_work(void *arg)
     ret = DAPP_MODL_EXIT_MACHINE(type, arg);
 
     if (DAPP_OK != ret) {
-        DAPP_TRACE("module %d exit fail! ERR : %d\n", type, ret);
+        DAPP_TRACE("ERROR : module %d exit fail! ERR : %d\n", type, ret);
         return DAPP_FAIL;
     }
     
@@ -237,7 +245,7 @@ int main(int argc, char *argv[])
      * Parse command line parameters
      */
     if (DAPP_OK != (ret = dapp_user_init(argc, argv, &usrspace))) {
-        DAPP_TRACE("dapp args parse fail\n");
+        DAPP_TRACE("ERROR : dapp args parse fail\n");
         return ret;
     }
 

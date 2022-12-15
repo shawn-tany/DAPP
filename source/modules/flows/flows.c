@@ -23,7 +23,7 @@ static int dapp_flows_init(void *arg)
     flows_ws.pkts_ring = rte_ring_lookup("PKTS_RING");
 
     if (!flows_ws.pkts_ring) {
-        printf("Can not find ring %s!\n", "PKTS_RING");
+        printf("ERROR : Can not find ring %s!\n", "PKTS_RING");
         return DAPP_FAIL;
     }
 
@@ -33,7 +33,7 @@ static int dapp_flows_init(void *arg)
     flows_ws.flows_ring = rte_ring_create("FLOWS_RING", 131072, rte_socket_id(), RING_F_SC_DEQ);
 
     if (!flows_ws.flows_ring) {
-        printf("ring %s create fail!\n", "FLOWS_RING");
+        printf("ERROR : ring %s create fail!\n", "FLOWS_RING");
         return DAPP_FAIL;
     }
 
