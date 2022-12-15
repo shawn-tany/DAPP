@@ -1,21 +1,22 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include "modules.h"
 #include "statistics.h"
 
-int statistics_init()
+STATISTIC_T statistic[DAPP_MODULE_TYPE_NUM];
+
+int statistics_clear(dapp_modules_type_t module)
 {
+    if (DAPP_MODULE_TYPE_NUM == module) {
+        memset(statistic, 0, sizeof(statistic));
+    }
+
+    memset(&statistic[module], 0, sizeof(statistic[module]));
+
     return 0;
 }
 
-int statistics_clear()
-{
-    return 0;
-}
+#define DAPP_STATISTIC_DATA_ADD(module, type, opra, step) \
+    statistic[module].type.opra += step
 
-int statistics_calc()
-{
-    return 0;
-}
-
-int statistics_exit()
-{
-    return 0;
-}

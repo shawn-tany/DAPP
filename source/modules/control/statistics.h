@@ -8,12 +8,12 @@
 typedef struct {
     UINT64_T pkts;
     UINT64_T bytes;
-} dapp_port_statistic_t;
+} STATISTIC_DATA_T;
 
 typedef struct {
-    dapp_port_statistic_t rx[DAPP_CORE_NUM];
-    dapp_port_statistic_t tx[DAPP_CORE_NUM];
-    dapp_port_statistic_t free[DAPP_CORE_NUM];
-} dapp_port_statistics_t;
+    STATISTIC_DATA_T rx[DAPP_CORE_NUM];
+    STATISTIC_DATA_T tx[DAPP_CORE_NUM];
+    STATISTIC_DATA_T free[DAPP_CORE_NUM];
+} STATISTIC_T;
 
 #endif
