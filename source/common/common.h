@@ -78,4 +78,6 @@ dapp_atomic32_cmpset(volatile UINT32_T *dst, UINT32_T exp, UINT32_T src)
     return res;
 }
 
+#define CORE_NUM (64)
+
 #endif

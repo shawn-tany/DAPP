@@ -61,7 +61,7 @@ if [[ -f $USER_BASH_PROFILE ]];
 		sed -i "\$a DAPP_RUNNING_PATH=\${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
 	fi;
 
-	# export runing path
+	# export running path
 	exp_running_path=`sed -n '/^PATH=\$PATH:\$DAPP_RUNNING_PATH/p' $USER_BASH_PROFILE`;
 	if [[ ! $exp_running_path ]];
 		then

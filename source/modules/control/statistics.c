@@ -1,10 +1,18 @@
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "modules.h"
 #include "statistics.h"
 
+static pthread_mutex_t dapp_statistic_mutex;
+
 STATISTIC_T statistic[DAPP_MODULE_TYPE_NUM];
+
+int statistics_init()
+{
+    pthread_mutex_init(&dapp_statistic_mutex, NULL);
+}
 
 int statistics_clear(dapp_modules_type_t module)
 {

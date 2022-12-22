@@ -57,10 +57,7 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
     stat(path, &st);
     
     if (!S_ISDIR(st.st_mode)) {
-
         dir_node_enqueue((*queue), path, 0, 0);
-    
-        goto TRAVAL_SUCCESS;
     } else {
         
         DIR *pDir = NULL;
@@ -93,7 +90,11 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
                     continue;
                 }
 
-                snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
+                if ('/' == dir_node.d_name[strlen(dir_node.d_name) - 1]) {
+                    snprintf(f_name, sizeof(f_name), "%s%s", dir_node.d_name, ent->d_name);
+                } else {
+                    snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
+                }
 
                 /*
                  * Is directory
@@ -106,8 +107,6 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
             }
         }
     }
-
-TRAVAL_SUCCESS :
 
     dapp_stack_free(dir_stack);
 

@@ -13,7 +13,7 @@ int main(int argc, char *argv[ ])
 
     dapp_queue_t *queue = NULL;
 
-    if (dir_push(&queue, path, 10240)) {
+    if (dir_push(&queue, path, 102400)) {
         printf("failed to push dir\n");
         return -1;
     }
@@ -28,10 +28,12 @@ int main(int argc, char *argv[ ])
         }
 
         if (!node.is_dir) {
-            printf("-%s\n", node.d_name);
+            printf("|");
         } else {
-            printf("+%s\n", node.d_name);
+            printf("+");
         }
+
+        printf("%s\n", node.d_name);
     }
 }
 
