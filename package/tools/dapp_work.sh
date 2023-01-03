@@ -12,7 +12,7 @@ function start {
 		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	else
 		echo "work mode online"
-		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$UIO_DRV $PORT_BIND1 $PORT_BIND2 >/dev/null 2>&1
+		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$UIO_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	fi
 	
 	$DAPP_INSTALL_PATH/bin/dapp &
@@ -24,12 +24,13 @@ function stop {
 
 	$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 
+	sleep 5
+
 	echo "dapp stop"
 }
 
 function restart {
 	stop
-	sleep 5
 	start $1
 }
 

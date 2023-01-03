@@ -17,7 +17,11 @@ static int dapp_control_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp control exec\n");
 
-    while (*running) {
+    /* io多路复用，命令行支持线程 */
+
+    /* 支持线程 */
+
+    while (*running) {    
         sleep(3);
     }
 
