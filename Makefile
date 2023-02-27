@@ -40,8 +40,7 @@ install :
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/* $(PACKAGE_DIR)/bin -rf
-	@cp $(TOOLS_DIR)/*.sh $(PACKAGE_DIR)/tools -rf
-	@cp $(TOOLS_DIR)/*.py $(PACKAGE_DIR)/tools -rf
+	@cp $(TOOLS_DIR)/script/* $(PACKAGE_DIR)/tools -rf
 
 	@# Create Package
 	@rm $(PACKAGE_DIR)/$(PACKAGE) -rf

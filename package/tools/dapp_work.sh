@@ -11,6 +11,14 @@ function start {
 		echo "work mode offline"
 		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	else
+		igb_uio_exist=`lsmod |grep igb_uio`;
+	
+		if [[ ! $igb_uio_exist ]]
+		then 
+			modprobe uio
+			insmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+		fi
+	
 		echo "work mode online"
 		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$UIO_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	fi
@@ -21,12 +29,19 @@ function start {
 
 function stop {
 	killall -2 dapp > /dev/null 2>&1
-
+	
 	$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
+
+	igb_uio_exist=`lsmod |grep igb_uio`;
 
 	sleep 5
 
 	echo "dapp stop"
+
+	if [[ $igb_uio_exist ]]
+	then 
+		rmmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+	fi
 }
 
 function restart {

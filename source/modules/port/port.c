@@ -28,7 +28,7 @@ static struct rte_eth_conf dev_conf_default = {
 };
 
 static dapp_port_ws_t port_ws;
-static dapp_module_t *port_module = NULL;
+static DAPP_MODULE_WK *port_module = NULL;
 
 static int dapp_port_init(void *arg)
 {

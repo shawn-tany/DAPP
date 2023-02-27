@@ -184,7 +184,7 @@ static int dapp_work(void *arg)
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
 
-    dapp_modules_type_t type;
+    DAPP_MODULES_TYPE type;
 
     /*
      * Get module type according to lcore 

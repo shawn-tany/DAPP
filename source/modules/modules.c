@@ -4,7 +4,7 @@
 #include "modules.h"
 #include "dapp_code.h"
 
-static dapp_modules_table_t MODULES;
+static DAPP_MODULES_TABLE MODULES;
 
 #define DAPP_MODULE_WAIT_TIMES (15)
 
@@ -31,7 +31,7 @@ static dapp_modules_table_t MODULES;
     MODULES.module[type].rely.init_status = status;     \
 }                                                       \
 
-char *dapp_modules_name_get_by_type(dapp_modules_type_t type)
+char *dapp_modules_name_get_by_type(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return "unknow";
@@ -45,7 +45,7 @@ UINT64_T dapp_modules_total_lcore_mask_get(void)
     return MODULES.lcore_mask;
 }
 
-UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type)
+UINT64_T dapp_module_lcore_mask_get(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return 0;
@@ -54,7 +54,7 @@ UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type)
     return MODULES.module[type].lcore.lcore_mask;
 }
 
-UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
+UINT16_T dapp_module_lcore_num_get_by_type(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return 0;
@@ -63,7 +63,7 @@ UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type)
     return MODULES.module[type].lcore.lcore_num;
 }
 
-dapp_modules_type_t dapp_module_type_get_by_lcore(UINT64_T lcore)
+DAPP_MODULES_TYPE dapp_module_type_get_by_lcore(UINT64_T lcore)
 {
     int i = 0;
     UINT64_T t;
@@ -80,7 +80,7 @@ dapp_modules_type_t dapp_module_type_get_by_lcore(UINT64_T lcore)
     return DAPP_MODULE_TYPE_NUM;
 }
 
-STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg)
+STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg)
 {
     int ret;
 
@@ -135,7 +135,7 @@ STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg)
     return DAPP_OK;
 }
 
-STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg)
+STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg)
 {
     int ret;
 
@@ -175,7 +175,7 @@ STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg)
     return DAPP_OK;
 }
 
-STATUS DAPP_MODL_EXIT_MACHINE(dapp_modules_type_t exit_type, void *arg)
+STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg)
 {
     int ret;
 
@@ -200,7 +200,7 @@ STATUS DAPP_MODL_EXIT_MACHINE(dapp_modules_type_t exit_type, void *arg)
     return DAPP_OK;
 }
 
-void dapp_module_reg(dapp_modules_type_t type, 
+void dapp_module_reg(DAPP_MODULES_TYPE type, 
                          const char *name, 
                          dapp_module_init init, 
                          dapp_module_exec exec, 
@@ -224,7 +224,7 @@ void dapp_module_reg(dapp_modules_type_t type,
     MODULES.module[type].reg.reg = 1;
 }
 
-void dapp_module_unreg(dapp_modules_type_t type)
+void dapp_module_unreg(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -236,7 +236,7 @@ void dapp_module_unreg(dapp_modules_type_t type)
     MODULES.module[type].reg.reg = 0;
 }
 
-void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
+void dapp_module_lcore_init(DAPP_MODULES_TYPE type, UINT16_T lcore_num)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -268,7 +268,7 @@ void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num)
     MODULES.lcore_num += lcore_num;
 }
 
-void dapp_module_lcore_uninit(dapp_modules_type_t type)
+void dapp_module_lcore_uninit(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -284,7 +284,7 @@ void dapp_module_lcore_uninit(dapp_modules_type_t type)
     MODULES.module[type].lcore.running = 0;
 }
 
-void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rely_num, ...)
+void dapp_module_rely_init(DAPP_MODULES_TYPE type, UINT8_T multi_init, int rely_num, ...)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -298,13 +298,13 @@ void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rel
 
     va_start(valist, rely_num);
 
-    dapp_modules_type_t rely_type;
+    DAPP_MODULES_TYPE rely_type;
 
     int i;
 
     for (i = 0; i < rely_num; ++i) {
 
-        rely_type = va_arg(valist, dapp_modules_type_t);
+        rely_type = va_arg(valist, DAPP_MODULES_TYPE);
 
         if (DAPP_MODULE_TYPE_NUM <= rely_type) {
             continue;
@@ -323,7 +323,7 @@ void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rel
     MODULES.module[type].rely.multi_init = multi_init;
 }
 
-void dapp_module_rely_uninit(dapp_modules_type_t type)
+void dapp_module_rely_uninit(DAPP_MODULES_TYPE type)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;

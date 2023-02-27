@@ -3,8 +3,9 @@ CC = gcc
 
 # binary name
 APP_PCAP_REPLAY = pcap_replay
-APP_HS_DB_COMPILE = hs_db_compile
+APP_DAPP_COMPILE = dapp_compile
 APP_DIR_TRAVAL = dir_traval
+APP_DAPP_CLI = dapp_cli
 
 ifeq ($(DAPP_ROOT_PATH),)
 $(error "Please define DAPP_ROOT_PATH environment variable")
@@ -31,17 +32,16 @@ PCAP_REPLAY_CFLAGS = -I $(TOOLS_LIB_DIR)/dpdk/include
 PCAP_REPLAY_CFLAGS += -I $(COMMON_DIR)
 PCAP_REPLAY_CFLAGS += -g
 
+# dapp compile
+# dapp compile source are stored in SRCS
+DAPP_COMPILE_SRCS = $(TOOLS_DIR)/dapp_compile.c
 
-# hyperscan database compile
-# hyperscan database compile source are stored in SRCS
-HS_DB_COMPILE_SRCS = $(TOOLS_DIR)/hs_db_compile.c
+# dapp compile library are stored in LIBS
+DAPP_COMPILE_LIBS = -L $(TOOLS_LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(TOOLS_LIB_DIR)/hyperscan/lib
 
-# hyperscan database compile library are stored in LIBS
-HS_DB_COMPILE_LIBS = -L $(TOOLS_LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(TOOLS_LIB_DIR)/hyperscan/lib
-
-# hyperscan database compile flags are stored in CFLAGS
-HS_DB_COMPILE_CFLAGS = -I $(TOOLS_LIB_DIR)/hyperscan/include
-HS_DB_COMPILE_CFLAGS += -g
+# dapp compile flags are stored in CFLAGS
+DAPP_COMPILE_CFLAGS = -I $(TOOLS_LIB_DIR)/hyperscan/include
+DAPP_COMPILE_CFLAGS += -g
 
 # directory traval
 # directory traval source are stored in SRCS
@@ -55,6 +55,17 @@ DIR_TRAVAL_LIBS =
 DIR_TRAVAL_CFLAGS = -I $(COMMON_DIR)
 DIR_TRAVAL_CFLAGS += -g
 
+# dapp cli
+# dapp cli source are stored in SRCS
+DAPP_CLI_SRCS = $(TOOLS_DIR)/dapp_cli.c
+
+# dapp cli library are stored in LIBS
+DAPP_CLI_LIBS = 
+
+# dapp cli flags are stored in CFLAGS
+DAPP_CLI_CFLAGS = -I $(COMMON_DIR)
+DAPP_CLI_CFLAGS += -g
+
 ALL :
 	@# check environment variable
 	@echo " make TOOLS..."
@@ -67,12 +78,16 @@ ALL :
 	@echo " make pcap replay tool success!"
 
 	@echo " make hyperscan database compile tool..."
-	@$(CC) $(HS_DB_COMPILE_SRCS) $(HS_DB_COMPILE_LIBS) $(HS_DB_COMPILE_CFLAGS) -o $(BUILD_DIR)/bin/$(APP_HS_DB_COMPILE)
+	@$(CC) $(DAPP_COMPILE_SRCS) $(DAPP_COMPILE_LIBS) $(DAPP_COMPILE_CFLAGS) -o $(BUILD_DIR)/bin/$(APP_DAPP_COMPILE)
 	@echo " make hyperscan database compile tool success!"
 
 	@echo " make directory traval tool..."
 	@$(CC) $(DIR_TRAVAL_SRCS) $(DIR_TRAVAL_LIBS) $(DIR_TRAVAL_CFLAGS) -o $(BUILD_DIR)/bin/$(APP_DIR_TRAVAL)
 	@echo " make directory traval tool success!"
+
+	@echo " make dapp cli tool..."
+	@$(CC) $(DAPP_CLI_SRCS) $(DAPP_CLI_LIBS) $(DAPP_CLI_CFLAGS) -o $(BUILD_DIR)/bin/$(APP_DAPP_CLI)
+	@echo " make dapp cli tool success!"
 	
 	@# compile
 	@echo " make success!"
@@ -80,5 +95,7 @@ ALL :
 clean :
 	@echo " clean TOOLS..."
 	@rm $(BUILD_DIR)/bin/$(APP_PCAP_REPLAY) -rf
-	@rm $(BUILD_DIR)/bin/$(APP_HS_DB_COMPILE) -rf
+	@rm $(BUILD_DIR)/bin/$(APP_DAPP_COMPILE) -rf
+	@rm $(BUILD_DIR)/bin/$(APP_DIR_TRAVAL) -rf
+	@rm $(BUILD_DIR)/bin/$(APP_DAPP_CLI) -rf
 	@echo " clean success!"

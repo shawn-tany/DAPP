@@ -2,6 +2,7 @@
 #define DAPP_SESSION
 
 #include "common.h"
+#include "dapp_list.h"
 
 typedef struct 
 {
@@ -28,7 +29,7 @@ typedef struct
 {
     struct rte_hash *hash;
     struct rte_mempool *pool;
-    dapp_list_head_t time_list;
+    dapp_list_t time_list;
 
     UINT32_T timeout;
         
@@ -38,7 +39,7 @@ typedef struct
 {
     UINT32_T proto_id;
     DAPP_SESSION_KEY_T session_key;
-    dapp_list_head_t time_node;
+    dapp_list_t time_node;
 
     UINT64_T timeout;
 

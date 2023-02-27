@@ -18,7 +18,7 @@ typedef enum
     DAPP_MODULE_FILES,
     DAPP_MODULE_TYPE_NUM,
     
-} dapp_modules_type_t;
+} DAPP_MODULES_TYPE;
 
 typedef enum
 {
@@ -74,47 +74,47 @@ typedef struct
         void *work_data;
         UINT32_T work_size;
     } ws;
-} __attribute((__packed__)) dapp_module_t;
+} __attribute((__packed__)) DAPP_MODULE_WK;
 
 typedef struct 
 {
-    dapp_module_t module[DAPP_MODULE_TYPE_NUM];
+    DAPP_MODULE_WK module[DAPP_MODULE_TYPE_NUM];
 
     UINT64_T lcore_mask;
     UINT8_T lcore_num;
-} __attribute((__packed__)) dapp_modules_table_t;
+} __attribute((__packed__)) DAPP_MODULES_TABLE;
 
-char *dapp_modules_name_get_by_type(dapp_modules_type_t type);
+char *dapp_modules_name_get_by_type(DAPP_MODULES_TYPE type);
 
 UINT64_T dapp_modules_total_lcore_mask_get(void);
 
-UINT64_T dapp_module_lcore_mask_get(dapp_modules_type_t type);
+UINT64_T dapp_module_lcore_mask_get(DAPP_MODULES_TYPE type);
 
-UINT16_T dapp_module_lcore_num_get_by_type(dapp_modules_type_t type);
+UINT16_T dapp_module_lcore_num_get_by_type(DAPP_MODULES_TYPE type);
 
-dapp_modules_type_t dapp_module_type_get_by_lcore(UINT64_T lcore);
+DAPP_MODULES_TYPE dapp_module_type_get_by_lcore(UINT64_T lcore);
 
-STATUS DAPP_MODL_INIT_MACHINE(dapp_modules_type_t init_type, void *arg);
+STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg);
 
-STATUS DAPP_MODL_EXEC_MACHINE(dapp_modules_type_t exec_type, void *arg);
+STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg);
 
-STATUS DAPP_MODL_EXIT_MACHINE(dapp_modules_type_t exit_type, void *arg);
+STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg);
 
-void dapp_module_reg(dapp_modules_type_t type, 
+void dapp_module_reg(DAPP_MODULES_TYPE type, 
                          const char *name, 
                          dapp_module_init init, 
                          dapp_module_exec exec, 
                          dapp_module_exit exit);
 
-void dapp_module_unreg(dapp_modules_type_t type);
+void dapp_module_unreg(DAPP_MODULES_TYPE type);
 
-void dapp_module_lcore_init(dapp_modules_type_t type, UINT16_T lcore_num);
+void dapp_module_lcore_init(DAPP_MODULES_TYPE type, UINT16_T lcore_num);
 
-void dapp_module_lcore_uninit(dapp_modules_type_t type);
+void dapp_module_lcore_uninit(DAPP_MODULES_TYPE type);
 
-void dapp_module_rely_init(dapp_modules_type_t type, UINT8_T multi_init, int rely_num, ...);
+void dapp_module_rely_init(DAPP_MODULES_TYPE type, UINT8_T multi_init, int rely_num, ...);
 
-void dapp_module_rely_uninit(dapp_modules_type_t type);
+void dapp_module_rely_uninit(DAPP_MODULES_TYPE type);
 
 /*
  * Macro of modules registration

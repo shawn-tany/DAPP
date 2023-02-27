@@ -14,7 +14,7 @@ int statistics_init()
     pthread_mutex_init(&dapp_statistic_mutex, NULL);
 }
 
-int statistics_clear(dapp_modules_type_t module)
+int statistics_clear(DAPP_MODULES_TYPE module)
 {
     if (DAPP_MODULE_TYPE_NUM == module) {
         memset(statistic, 0, sizeof(statistic));
