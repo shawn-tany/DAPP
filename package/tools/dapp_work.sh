@@ -52,8 +52,8 @@ function restart {
 function help
 {
 	echo "OPTIONS :"
-	echo "	start [online|offline]"
-	echo "	restart [online|offline]"
+	echo "	start    [online|offline]"
+	echo "	restart  [online|offline]"
 	echo "	online"
 	echo "	offline"
 	echo "	stop"

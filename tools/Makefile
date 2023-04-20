@@ -4,7 +4,7 @@ CC = gcc
 # binary name
 APP_PCAP_REPLAY = pcap_replay
 APP_DAPP_COMPILE = dapp_compile
-APP_DIR_TRAVAL = dir_traval
+APP_DIR_TRAVAL = dirtraval
 APP_DAPP_CLI = dapp_cli
 
 ifeq ($(DAPP_ROOT_PATH),)

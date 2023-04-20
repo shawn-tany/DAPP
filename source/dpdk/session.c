@@ -11,7 +11,7 @@ int dapp_session_table_create(DAPP_SESSION_TABLE_T **session, UINT32_T priv_size
 {
     unsigned flags = MEMPOOL_F_NO_SPREAD;
 
-    /*
+    /**
      * Apply for a sessoin table
      */
     *session = rte_malloc(NULL, sizeof(DAPP_SESSION_TABLE_T), 2);
@@ -21,7 +21,7 @@ int dapp_session_table_create(DAPP_SESSION_TABLE_T **session, UINT32_T priv_size
         return -1;
     }
 
-    /*
+    /**
      * Create a mempool for session table node
      */
     (*session)->pool = rte_mempool_create("DAPP_SESSION_POOL", node_num, sizeof(DAPP_SESSION_NODE_T), 0, 
@@ -46,7 +46,7 @@ int dapp_session_table_create(DAPP_SESSION_TABLE_T **session, UINT32_T priv_size
     (*session)->timeout = timeout;
     dapp_list_init(&((*session)->time_list));
 
-    /*
+    /**
      * Create a hash table for session
      */
     (*session)->hash = rte_hash_create(&params);
@@ -67,7 +67,7 @@ int dapp_session_node_create(DAPP_SESSION_TABLE_T *session, DAPP_SESSION_NODE_T 
         return -1;
     }
 
-    /*
+    /**
      * Check the size of private data
      */
     if (session->pool->private_data_size < priv_size) {
@@ -75,7 +75,7 @@ int dapp_session_node_create(DAPP_SESSION_TABLE_T *session, DAPP_SESSION_NODE_T 
         return -1;
     }
 
-    /*
+    /**
      * Take out a sessoin node from mempool
      */
     if (0 != rte_mempool_get(session->pool, (void **)node)) {
@@ -83,19 +83,19 @@ int dapp_session_node_create(DAPP_SESSION_TABLE_T *session, DAPP_SESSION_NODE_T 
         return -1;
     }
 
-    /*
+    /**
      * Supplement data for session node
      */
     (*node)->session_key = *session_key;
     (*node)->timeout = rte_get_tsc_cycles() + session->timeout;
     rte_memcpy((*node)->data, priv_data, priv_size);
 
-    /*
+    /**
      * Add session node in timeout list
      */
     dapp_list_add_tail(&session->time_list, &(*node)->time_node);
 
-    /*
+    /**
      * Insert session node into the hash table as data with session key
      */
     if (0 != rte_hash_add_key_data(session->hash, (void *)session_key, *node)) {
@@ -113,29 +113,29 @@ int dapp_session_node_refresh(DAPP_SESSION_TABLE_T *session, DAPP_SESSION_NODE_T
         return -1;
     }
 
-    /*
+    /**
      * Delete session node in hash table
      */
     if (0 != rte_hash_del_key(session->hash, (void *)(&(node->session_key)))) {
         return -1;
     }
 
-    /*
+    /**
      * Delete session node in timeout list
      */
     dapp_list_del(&(node->time_node));
 
-    /*
+    /**
      * Supplement data for session node
      */
     node->timeout = rte_get_tsc_cycles() + session->timeout;
 
-    /*
+    /**
      * Add session node in timeout list
      */
     dapp_list_add_tail(&session->time_list, &(node->time_node));
 
-    /*
+    /**
      * Insert session node into the hash table as data with session key
      */
     if (0 != rte_hash_add_key_data(session->hash, (void *)(&(node->session_key)), node)) {
@@ -153,7 +153,7 @@ int dapp_session_node_lookup(DAPP_SESSION_TABLE_T *session, DAPP_SESSION_KEY_T *
         return -1;
     }
 
-    /*
+    /**
      * Whether the session node exist
      */
     if (0 != rte_hash_lookup_data(session->hash, (void *)session_key, (void **)node)) {
