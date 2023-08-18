@@ -25,10 +25,12 @@ PCAP_REPLAY_SRCS += $(COMMON_DIR)/dapp_dir_traval.c $(COMMON_DIR)/dapp_queue.c $
 
 # pcap replay library are stored in LIBS
 PCAP_REPLAY_LIBS = -L $(TOOLS_LIB_DIR)/dpdk/lib -ldpdk -Wl,-rpath=$(TOOLS_LIB_DIR)/dpdk/lib
-PCAP_REPLAY_LIBS += -lpthread -lnuma -ldl -march=native -lpcap
+PCAP_REPLAY_LIBS += -L $(TOOLS_LIB_DIR)/pcap/lib -lpcap -Wl,-rpath=$(TOOLS_LIB_DIR)/pcap/lib
+PCAP_REPLAY_LIBS += -lpthread -lnuma -ldl -march=native
 
 # pcap replay flags are stored in CFLAGS
 PCAP_REPLAY_CFLAGS = -I $(TOOLS_LIB_DIR)/dpdk/include
+PCAP_REPLAY_CFLAGS += -I $(TOOLS_LIB_DIR)/pcap/include
 PCAP_REPLAY_CFLAGS += -I $(COMMON_DIR)
 PCAP_REPLAY_CFLAGS += -g
 

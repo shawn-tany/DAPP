@@ -52,7 +52,7 @@ config()
 			sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
 		else
 			echo "increase dapp running path $DAPP_RUNNING_PATH"
-			sed -i "\$a DAPP_RUNNING_PATH=\${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
+			sed -i "\$a DAPP_RUNNING_PATH=${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
 		fi;
 
 		# export running path

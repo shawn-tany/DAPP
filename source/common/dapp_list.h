@@ -10,6 +10,13 @@ typedef struct dapp_list_head
     struct dapp_list_head *next;
 } dapp_list_t;
 
+void dapp_list_init(dapp_list_t *head);
+
+void dapp_list_add(dapp_list_t *head, dapp_list_t *new);
+
+void dapp_list_add_tail(dapp_list_t *head, dapp_list_t *new);
+
+void dapp_list_del(dapp_list_t *del);
 
 #define offsetof(type, member) ((size_t) &(((type *)0)->member))
 

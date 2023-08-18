@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 #include "dapp_dir_traval.h"
 
@@ -11,10 +12,16 @@ int main(int argc, char *argv[ ])
 
     char *path = argv[1];
 
+    if (access(path, F_OK))
+    {
+        printf("ERROR \"%s\": no such file or directory!\n", path);
+        return -1;
+    }
+
     dapp_queue_t *queue = NULL;
 
     if (dir_push(&queue, path, 102400)) {
-        printf("failed to push dir\n");
+        printf("ERROR : failed to push dir!\n");
         return -1;
     }
 
@@ -24,7 +31,7 @@ int main(int argc, char *argv[ ])
     while (!dir_pop(queue, &node)) {
 
         for (i = 0; i < node.depth; ++i) {
-            printf("    ");
+            printf("  ");
         }
 
         if (!node.is_dir) {

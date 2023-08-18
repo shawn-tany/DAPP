@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -39,6 +40,11 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
     dapp_stack_t *dir_stack = NULL;
 
     dir_node_t dir_node;
+
+    if (access(path, F_OK))
+    {
+        goto TRAVAL_FAILED;
+    }
 
     (*queue) = dapp_queue_create(file_num, sizeof(dir_node_t));
 

@@ -1,6 +1,7 @@
 #ifndef DAPP_MODULES
 #define DAPP_MODULES
 
+#include <unistd.h>
 #include "common.h"
 
 #define MODULES_ITEM(a) (sizeof(a) / sizeof((a)[0]))
@@ -126,12 +127,12 @@ void dapp_module_rely_uninit(DAPP_MODULES_TYPE type);
 #define DAPP_MODULE_UNREG(module) _DAPP_MODULE_UNREG(module)
 
 #define DAPP_MODULE_REG_CONSTRUCTOR(type, name, init, exec, exit)   \
-    static __attribute__((constructor)) DAPP_MODULE_REG(name)() {   \
+    static void __attribute__((constructor)) DAPP_MODULE_REG(name)() {   \
         dapp_module_reg(type, #name, init, exec, exit);             \
     }
 
 #define DAPP_MODULE_UNREG_DESTRUCTOR(type, name)                    \
-    static __attribute__((destructor)) DAPP_MODULE_UNREG(name)() {  \
+    static void __attribute__((destructor)) DAPP_MODULE_UNREG(name)() {  \
         dapp_module_unreg(type);                                    \
     }
 

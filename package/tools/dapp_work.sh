@@ -23,12 +23,13 @@ function start {
 		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$UIO_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	fi
 	
-	$DAPP_INSTALL_PATH/bin/dapp &
+	$DAPP_INSTALL_PATH/bin/dapp_deamon $DAPP_INSTALL_PATH/bin/dapp
 	echo "dapp running"
 }
 
 function stop {
-	killall -2 dapp > /dev/null 2>&1
+	killall -9 dapp_deamon > /dev/null 2>&1
+	killall -9 dapp > /dev/null 2>&1
 	
 	$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 
