@@ -1,6 +1,9 @@
 # compile tool
 CC = gcc
 
+# binary name
+APP = dapp_compile
+
 ifeq ($(DAPP_ROOT_PATH),)
 $(error "Please define DAPP_ROOT_PATH environment variable")
 endif
@@ -11,31 +14,27 @@ BUILD_DIR  = $(DAPP_ROOT_PATH)/build
 COMMON_DIR = $(DAPP_ROOT_PATH)/source/common
 LIB_DIR    = $(DAPP_ROOT_PATH)/lib
 
-TOOL_COMPILE_DIRS  = $(TOOLS_DIR)/cli
-TOOL_COMPILE_DIRS += $(TOOLS_DIR)/dir
-TOOL_COMPILE_DIRS += $(TOOLS_DIR)/deamon 
-TOOL_COMPILE_DIRS += $(TOOLS_DIR)/match
-TOOL_COMPILE_DIRS += $(TOOLS_DIR)/replay
+# SRCS
+SRCS = $(TOOLS_DIR)/match/dapp_compile.c
+
+# LIBS
+LIBS = -L $(LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(LIB_DIR)/hyperscan/lib
+
+# CFLAGS
+CFLAGS  = -I $(LIB_DIR)/hyperscan/include
+CFLAGS += -g
 
 ALL :
 	@# check environment variable
-	@echo " make TOOLS..."
 	@# create directory
 	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
 	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
 
-	@for dir in $(TOOL_COMPILE_DIRS);			\
-	do 							\
-	   make --no-print-directory -f $$dir/Makefile;		\
-	done;
-
-	@# compile
-	@echo " make success!"
+	@echo " make $(APP) tool..."
+	@$(CC) $(SRCS) $(LIBS) $(CFLAGS) -o $(BUILD_DIR)/bin/$(APP)
+	@echo " make $(APP) tool success!"
 
 clean :
-	@for dir in $(TOOL_COMPILE_DIRS);			\
-	do 							\
-	   make --no-print-directory -f $$dir/Makefile clean;	\
-	done;
-
-	
+	@echo " clean $(APP)..."
+	@rm $(BUILD_DIR)/bin/$(APP) -rf
+	@echo " clean $(APP) success!"

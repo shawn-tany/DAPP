@@ -272,7 +272,14 @@ int main(int argc, char *argv[ ])
     argv1[argc1] = argvList[0];
     snprintf(argv1[argc1++], 256, "--proc-type=secondary");
     argv1[argc1] = argvList[1];
-    snprintf(argv1[argc1++], 256, "-c80");
+    snprintf(argv1[argc1++], 256, "-c%x", 1 << 3);
+
+    int i = 0;
+
+    for (i = 0; i < argc1; ++i)
+    {
+        printf("argv[%d] = %s\n", i, argv1[i]);
+    }
 
     /*
      * dpdk init

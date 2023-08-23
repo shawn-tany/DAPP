@@ -77,7 +77,9 @@ help()
 
 USER_BASH_PROFILE=~/.bash_profile
 
-export DAPP_INSTALL_PATH_OLD=$DAPP_INSTALL_PATH
+DAPP_INSTALL_PATH_OLD=$DAPP_INSTALL_PATH
+echo $DAPP_INSTALL_PATH_OLD
+export DAPP_INSTALL_PATH_OLD
 
 DAPP_ROOT_PATH=$(pwd)
 DAPP_INSTALL_PATH=~/dapp
@@ -93,8 +95,7 @@ do
 	case $1 in 
 		-p|--prefix)
 			if [ ! -d $2 ]; then 
-			    echo "$1 directory or file not exist"
-			    exit
+				mkdir -p $2
 			fi
 			DAPP_INSTALL_PATH=$2
 			DAPP_CONFIG_CHANGE=true
@@ -115,4 +116,5 @@ DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/bin:$DAPP_INSTALL_PATH/tools
 
 if [ true == $DAPP_CONFIG_CHANGE -o "" == "$DAPP_INSTALL_PATH_OLD" ]; then
 	config
+	source $USER_BASH_PROFILE
 fi

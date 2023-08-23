@@ -10,7 +10,7 @@ endif
 
 # all directory are defined in here
 SOURCE_DIR = $(DAPP_ROOT_PATH)/source
-BUILD_DIR = $(DAPP_ROOT_PATH)/build
+BUILD_DIR  = $(DAPP_ROOT_PATH)/build
 
 # all source are stored in SRCS
 SRCS = $(SOURCE_DIR)/main.c
