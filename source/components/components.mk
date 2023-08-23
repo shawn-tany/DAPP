@@ -1,0 +1,5 @@
+COMPONENTS_DIR = $(SOURCE_DIR)/components
+
+
+
+CFLAGS += -I $(COMPONENTS_DIR)

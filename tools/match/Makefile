@@ -9,10 +9,11 @@ $(error "Please define DAPP_ROOT_PATH environment variable")
 endif
 
 # all directory are defined in here
-TOOLS_DIR  = $(DAPP_ROOT_PATH)/tools
-BUILD_DIR  = $(DAPP_ROOT_PATH)/build
-COMMON_DIR = $(DAPP_ROOT_PATH)/source/common
-LIB_DIR    = $(DAPP_ROOT_PATH)/lib
+TOOLS_DIR      = $(DAPP_ROOT_PATH)/tools
+BUILD_DIR      = $(DAPP_ROOT_PATH)/build
+COMMON_DIR     = $(DAPP_ROOT_PATH)/source/common
+COMPONENTS_DIR = $(DAPP_ROOT_PATH)/source/common
+LIB_DIR        = $(DAPP_ROOT_PATH)/lib
 
 # SRCS
 SRCS = $(TOOLS_DIR)/match/dapp_compile.c
