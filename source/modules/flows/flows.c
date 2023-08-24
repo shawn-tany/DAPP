@@ -17,8 +17,6 @@ static dapp_flows_ws_t flows_ws;
 
 static int dapp_flows_init(void *arg)
 {
-    int ret;
-    
     DAPP_TRACE("dapp flows init\n");
 
     flows_ws.pkts_ring = rte_ring_lookup("PKTS_RING");

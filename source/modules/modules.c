@@ -247,17 +247,16 @@ void dapp_module_lcore_init(DAPP_MODULES_TYPE type, UINT16_T lcore_num)
     }
 
     int i = 0;
-    UINT64_T mask = 0;
 
     for (i = 0; i < lcore_num; ++i) {
         /*
          * Initialize Module lcore Mask
          */
-        DAPP_MASK_SET(MODULES.module[type].lcore.lcore_mask, MODULES.lcore_num + i);
+        DAPP_MASK_SET(MODULES.module[type].lcore.lcore_mask, (MODULES.lcore_num + i));
         /*
          * Initialize program lcore Mask
          */
-        DAPP_MASK_SET(MODULES.lcore_mask, MODULES.lcore_num + i);
+        DAPP_MASK_SET(MODULES.lcore_mask, (MODULES.lcore_num + i));
     }
 
     /*

@@ -54,3 +54,5 @@ uninstall :
 	@echo " uninstall DAPP..."
 	@if [ -d "$(DAPP_INSTALL_PATH)" ]; then rm $(DAPP_INSTALL_PATH) -rf; fi
 	@echo " uninstall success!"
+
+include $(DAPP_ROOT_PATH)/env.mk

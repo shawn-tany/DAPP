@@ -15,12 +15,13 @@ BUILD_DIR  = $(DAPP_ROOT_PATH)/build
 # all source are stored in SRCS
 SRCS = $(SOURCE_DIR)/main.c
 
-# all library are stored in SRCS
+# all library are stored in LIBS
 
 CFLAGS += -g
 CFLAGS += -D DAPP_DEBUG
 CFLAGS += -D DAPP_CONFIG_PATH=\"$(DAPP_INSTALL_PATH)/config\"
 CFLAGS += -D DAPP_CACHE_PATH=\"$(DAPP_INSTALL_PATH)/cache\"
+CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 CFLAGS += -O0
 
 ALL :
@@ -39,6 +40,7 @@ clean :
 	@rm $(BUILD_DIR)/bin/$(APP) -rf
 	@echo " clean success!"
 
+include $(DAPP_ROOT_PATH)/env.mk
 include $(DAPP_ROOT_PATH)/lib/lib.mk
 include $(SOURCE_DIR)/dpdk/dpdk.mk
 include $(SOURCE_DIR)/common/common.mk

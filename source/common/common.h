@@ -46,6 +46,8 @@ typedef enum
 
 #define ITEM(a) (sizeof(a) / sizeof((a)[0]))
 
+#define UNUSED(a) ((void)(a))
+
 #define DAPP_CONSTRUCTOR(func, args...)             \
 {                                                   \
     __attribute__((constructor)) func(args...);     \

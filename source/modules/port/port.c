@@ -28,7 +28,6 @@ static struct rte_eth_conf dev_conf_default = {
 };
 
 static dapp_port_ws_t port_ws;
-static DAPP_MODULE_WK *port_module = NULL;
 
 static int dapp_port_init(void *arg)
 {
@@ -175,7 +174,7 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
 
     UINT16_T rx_queue_id = lcore_id % port_ws.n_rx_queue;
     UINT16_T tx_queue_id = lcore_id % port_ws.n_tx_queue;
-
+    
     /*
      * Port loop
      */
@@ -202,7 +201,7 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
                 }
 
                 if (stats.imissed || stats.ierrors || stats.rx_nombuf) {
-                    printf("WARNING : dpdk rx fail! imissed = %llu ierrors = %llu rx_nombuf = %llu\n", stats.imissed, stats.ierrors, stats.rx_nombuf);
+                    printf("WARNING : dpdk rx fail! imissed = %lu ierrors = %lu rx_nombuf = %lu\n", stats.imissed, stats.ierrors, stats.rx_nombuf);
                 }
 
                 if (!rte_mempool_avail_count(port_ws.rx_mempool)) {
@@ -234,6 +233,8 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
     }
 
     DAPP_TRACE("dapp port exec end\n");
+
+    UNUSED(tx_queue_id);
 
     return DAPP_OK;
 }

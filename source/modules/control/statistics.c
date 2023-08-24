@@ -12,6 +12,8 @@ STATISTIC_T statistic[DAPP_MODULE_TYPE_NUM];
 int statistics_init()
 {
     pthread_mutex_init(&dapp_statistic_mutex, NULL);
+
+    return 0;
 }
 
 int statistics_clear(DAPP_MODULES_TYPE module)

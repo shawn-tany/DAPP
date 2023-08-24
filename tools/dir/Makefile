@@ -26,6 +26,7 @@ LIBS =
 CFLAGS  = -I $(COMMON_DIR)
 CFLAGS += -I $(COMPONENTS_DIR)
 CFLAGS += -g
+CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 
 ALL :
 	@# check environment variable
@@ -41,3 +42,5 @@ clean :
 	@echo " clean $(APP)..."
 	@rm $(BUILD_DIR)/bin/$(APP) -rf
 	@echo " clean $(APP) success!"
+
+include $(DAPP_ROOT_PATH)/env.mk

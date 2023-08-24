@@ -25,7 +25,7 @@ static pcap_dumper_t *dapp_pcap_open(void)
     pcap_dumper_t *dumper = NULL;
 
     char cachepath[256] = {0};
-    char filename[256] = {0};
+    char filename[300] = {0};
     
 #ifdef DAPP_CACHE_PATH
     snprintf(cachepath, sizeof(cachepath), "%s", DAPP_CACHE_PATH);
@@ -35,7 +35,7 @@ static pcap_dumper_t *dapp_pcap_open(void)
     
     DAPP_TRACE("dapp cache : %s\n", cachepath);
 
-    snprintf(filename, sizeof(filename), "%s/dapp.pcap", cachepath);
+    snprintf(filename, sizeof(filename), "%s/%s", cachepath, "dapp.pcap");
 
     DAPP_TRACE("dapp pcap dumper open : %s\n", filename);
 
@@ -132,7 +132,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
                 continue;
             }
 
-            if (0 != dapp_pcap_dump(dumper, pktbuf, mbuff[i]->data_len)) {
+            if (0 != dapp_pcap_dump(dumper, (uint8_t *)pktbuf, mbuff[i]->data_len)) {
                 printf("ERROR : pcap dump fail\n");
                 return -1;
             }

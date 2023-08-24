@@ -48,6 +48,7 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     struct option long_options[] = {
         {"config",      1,  0,  's'},
         {"rule",        1,  0,  'r'},
+        {"version",     0,  0,  'v'},
         {"help",        0,  0,  'h'},
         {0,             0,  0,  0}
     };
@@ -71,7 +72,7 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     /*
      * Parse command line parameters
      */
-    while (-1 != (opt = getopt_long(argc, argv, "c:r:h", long_options, NULL))) {
+    while (-1 != (opt = getopt_long(argc, argv, "c:r:vh", long_options, NULL))) {
         switch (opt) {
             case 'c' :
                 snprintf(conf_file, sizeof(conf_file), "%s", optarg);
@@ -79,10 +80,17 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
             case 'r' :
                 snprintf(rule_file, sizeof(rule_file), "%s", optarg);
                 break;
+            case 'v' :
+                printf("\n"
+                       " DAPP version : %s\n"
+                       "\n",
+                       DAPP_BUILD_VERSION);
+                exit(0);
             case 'h' :
                 printf("%s OPTIONS :\n"
                        "    -c, --config, set startup configuration file\n"
                        "    -r, --rule,   set rule configuration file\n"
+                       "    -v, --version,show version\n"
                        "    -h, --help,   show optoins\n", argv[0]);
                 exit(0);
             default :
@@ -90,6 +98,7 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
                 printf("%s OPTIONS :\n"
                        "    -c, --config, set startup configuration file\n"
                        "    -r, --rule,   set rule configuration file\n"
+                       "    -v, --version,show version\n"
                        "    -h, --help,   show optoins\n", argv[0]);
                 exit(1);
         }
@@ -162,7 +171,7 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
      * lcore
      */
     argv[narg] = eal_args[narg];
-    snprintf(argv[narg++], DPDK_ARG_SIZE, "-c%x", us->lcore_mask);
+    snprintf(argv[narg++], DPDK_ARG_SIZE, "-c%llx", us->lcore_mask);
 
     *argc = narg;
 
@@ -179,8 +188,6 @@ int dpdk_args_parse_callback(int *argc, char *argv[], void *arg)
 
 static int dapp_work(void *arg)
 {
-    int i = 0;
-
     unsigned lcore_id;
     lcore_id = dpdk_lcore_id();
 

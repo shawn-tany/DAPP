@@ -67,7 +67,7 @@ int dir_push(dapp_queue_t **queue, const char *path, int file_num)
     } else {
         
         DIR *pDir = NULL;
-        char f_name[256] = {0};
+        char f_name[512] = {0};
 
         dir_node_enstack(dir_stack, path, 1, 0);
 

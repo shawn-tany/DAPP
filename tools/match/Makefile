@@ -24,6 +24,7 @@ LIBS = -L $(LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(LIB_DIR)/hyperscan/lib
 # CFLAGS
 CFLAGS  = -I $(LIB_DIR)/hyperscan/include
 CFLAGS += -g
+CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 
 ALL :
 	@# check environment variable
@@ -39,3 +40,5 @@ clean :
 	@echo " clean $(APP)..."
 	@rm $(BUILD_DIR)/bin/$(APP) -rf
 	@echo " clean $(APP) success!"
+
+include $(DAPP_ROOT_PATH)/env.mk

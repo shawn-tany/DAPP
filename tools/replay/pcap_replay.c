@@ -29,6 +29,8 @@ static struct {
 
 static UINT8_T running = 1;
 
+static UINT64_T enq_count = 0;
+
 void signal_handle(int sig)
 {
     if (SIGINT == sig) {
@@ -102,10 +104,6 @@ static int args_check(void)
     return 1;
 }
 
-static UINT64_T deq_count = 0;
-static UINT64_T enq_count = 0;
-static UINT64_T rls_count = 0;
-
 static int pcap_file_replay(const char *path)
 {
     int ret = 0;
@@ -115,7 +113,6 @@ static int pcap_file_replay(const char *path)
     char err_buf[PCAP_ERRBUF_SIZE] = {0};
     struct rte_mbuf *mbuf[8] = {0};
     struct pcap_pkthdr pkthdr;
-    int msg_count = 0;
     int file_end = 0;
     UINT32_T nenq_msg = 0;
 
