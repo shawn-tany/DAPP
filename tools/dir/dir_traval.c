@@ -5,12 +5,15 @@
 
 int main(int argc, char *argv[ ])
 {
+    char *path = NULL;
+    
     if (2 > argc) {
-        printf("ERROR : Please select a directory!\n");
-        return -1;
+        path = ".";
     }
-
-    char *path = argv[1];
+    else
+    {
+        path = argv[1];
+    }
 
     if (access(path, F_OK))
     {
