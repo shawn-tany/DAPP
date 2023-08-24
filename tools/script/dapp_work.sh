@@ -50,6 +50,13 @@ function restart {
 	start $1
 }
 
+function version
+{
+	echo ""
+	echo " DAPP version : $(cat ${DAPP_INSTALL_PATH}/version)"
+	echo ""
+}
+
 function help
 {
 	echo "OPTIONS :"
@@ -58,6 +65,7 @@ function help
 	echo "	online"
 	echo "	offline"
 	echo "	stop"
+	echo "	version"
 	echo "	help"
 }
 
@@ -76,6 +84,9 @@ then
 elif [ "$1" = "restart" ]
 then
 	restart $2
+elif [ "$1" = "version" ]
+then
+	version
 elif [ "$1" = "help" ]
 then
 	help

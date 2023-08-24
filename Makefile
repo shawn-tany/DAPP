@@ -24,6 +24,7 @@ endif
 ALL :
 	@make --no-print-directory -f $(DAPP_ROOT_PATH)/source/Makefile
 	@make --no-print-directory -f $(DAPP_ROOT_PATH)/tools/Makefile
+	@echo $(BUILD_VERSION) > $(BUILD_DIR)/version
 
 clean :
 	@make --no-print-directory -f source/Makefile clean
@@ -40,6 +41,7 @@ install :
 
 	@# update package
 	@cp $(BUILD_DIR)/bin/* $(PACKAGE_DIR)/bin -rf
+	@cp $(BUILD_DIR)/version $(PACKAGE_DIR)/ -rf
 	@cp $(TOOLS_DIR)/script/* $(PACKAGE_DIR)/tools -rf
 
 	@# Create Package

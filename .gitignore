@@ -2,4 +2,5 @@ SDK
 build
 package/bin
 package/*.tar.gz
-package/tools/bin
+package/tools/*
+package/version

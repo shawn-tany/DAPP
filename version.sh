@@ -6,6 +6,8 @@ MODIFYS="A M D R U"
 
 STATUSS=$(git status -s |awk '{print substr($0,0,2)}')
 
+has_modify=0
+
 for status in ${STATUSS};
 do
     for modify in ${MODIFYS};
@@ -13,8 +15,15 @@ do
         if [ "${status}" = "${modify}" ]
         then
             VERSION=${VERSION}-${status}
+            has_modify=1
+            break;
         fi
     done
+
+    if [ ${has_modify} -eq 1 ]
+    then
+        break;
+    fi
 done
 
 NOPUSH=`git log ${BRANCH} ^origin/${BRANCH} | grep commit | wc -l`
