@@ -26,6 +26,7 @@ CFLAGS += -O0
 
 ALL :
 	@echo " make DAPP..."
+	@echo " build version $(BUILD_VERSION)"
 	
 	@# create directory
 	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
