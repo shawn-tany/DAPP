@@ -14,11 +14,11 @@ BUILD_DIR = $(DAPP_ROOT_PATH)/build
 .PHONY : ALL clean install uninstall
 
 ifeq ($(DAPP_ROOT_PATH),)
-$(error "Please define DAPP_ROOT_PATH environment variable")
+$(error "Please execute configure before the first compilation")
 endif
 
 ifeq ($(DAPP_INSTALL_PATH),)
-$(error "Please define DAPP_INSTALL_PATH environment variable")
+$(error "Please execute configure before the first compilation")
 endif
 
 ALL :

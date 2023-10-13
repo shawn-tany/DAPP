@@ -5,7 +5,7 @@ CC = gcc
 APP = dapp
 
 ifeq ($(DAPP_ROOT_PATH),)
-$(error "Please define DAPP_ROOT_PATH environment variable")
+$(error "Please execute configure before the first compilation")
 endif
 
 # all directory are defined in here

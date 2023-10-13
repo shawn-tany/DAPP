@@ -2,83 +2,82 @@
 
 config()
 {
-	# file exist
-	if [[ -f $USER_BASH_PROFILE ]];
-		then
+    # file exist
+    if [[ -f $USER_BASH_PROFILE ]];
+    then
 
-		# root path
-		root_path=`sed -n '/^DAPP_ROOT_PATH=/p' $USER_BASH_PROFILE`;
-		if [[ $root_path ]];
-			then
-			echo "update dapp root path $DAPP_ROOT_PATH"
-			sed -e 's!^DAPP_ROOT_PATH=.*!DAPP_ROOT_PATH='"${DAPP_ROOT_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
-		else
-			echo "increase dapp root path $DAPP_ROOT_PATH"
-			sed -i "\$a DAPP_ROOT_PATH=${DAPP_ROOT_PATH}" $USER_BASH_PROFILE;
-		fi;
+        # root path
+        root_path=`sed -n '/^DAPP_ROOT_PATH=/p' $USER_BASH_PROFILE`;
+        if [[ $root_path ]];
+        then
+            echo "update dapp root path $DAPP_ROOT_PATH"
+            sed -e 's!^DAPP_ROOT_PATH=.*!DAPP_ROOT_PATH='"${DAPP_ROOT_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+        else
+            echo "increase dapp root path $DAPP_ROOT_PATH"
+            sed -i "\$a DAPP_ROOT_PATH=${DAPP_ROOT_PATH}" $USER_BASH_PROFILE;
+        fi;
 
-		# export root
-		exp_root=`sed -n '/^export DAPP_ROOT_PATH/p' $USER_BASH_PROFILE`;
-		if [[ ! $exp_root ]];
-			then
-			echo "export dapp root path $DAPP_ROOT_PATH"
-			sed -i "\$a export DAPP_ROOT_PATH" $USER_BASH_PROFILE;
-		fi;
+        # export root
+        exp_root=`sed -n '/^export DAPP_ROOT_PATH/p' $USER_BASH_PROFILE`;
+        if [[ ! $exp_root ]];
+        then
+            echo "export dapp root path $DAPP_ROOT_PATH"
+            sed -i "\$a export DAPP_ROOT_PATH" $USER_BASH_PROFILE;
+        fi;
 
-		# install path
-		install_path=`sed -n '/^DAPP_INSTALL_PATH=/p' $USER_BASH_PROFILE`;
-		if [[ $install_path ]];
-			then
-			echo "update dapp install path $DAPP_INSTALL_PATH"
-			sed -e 's!^DAPP_INSTALL_PATH=.*!DAPP_INSTALL_PATH='"${DAPP_INSTALL_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
-		else
-			echo "increase dapp install path $DAPP_INSTALL_PATH"
-			sed -i "\$a DAPP_INSTALL_PATH=${DAPP_INSTALL_PATH}" $USER_BASH_PROFILE;
-		fi;
+        # install path
+        install_path=`sed -n '/^DAPP_INSTALL_PATH=/p' $USER_BASH_PROFILE`;
+        if [[ $install_path ]];
+        then
+            echo "update dapp install path $DAPP_INSTALL_PATH"
+            sed -e 's!^DAPP_INSTALL_PATH=.*!DAPP_INSTALL_PATH='"${DAPP_INSTALL_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+        else
+            echo "increase dapp install path $DAPP_INSTALL_PATH"
+            sed -i "\$a DAPP_INSTALL_PATH=${DAPP_INSTALL_PATH}" $USER_BASH_PROFILE;
+        fi;
 
-		# export install
-		exp_root=`sed -n '/^export DAPP_INSTALL_PATH/p' $USER_BASH_PROFILE`;
-		if [[ ! $exp_root ]];
-			then
-			echo "export dapp install path $DAPP_INSTALL_PATH"
-			sed -i "\$a export DAPP_INSTALL_PATH" $USER_BASH_PROFILE;
-		fi;
+        # export install
+        exp_root=`sed -n '/^export DAPP_INSTALL_PATH/p' $USER_BASH_PROFILE`;
+        if [[ ! $exp_root ]];
+        then
+            echo "export dapp install path $DAPP_INSTALL_PATH"
+            sed -i "\$a export DAPP_INSTALL_PATH" $USER_BASH_PROFILE;
+        fi;
 
-		# running path
-		running_path=`sed -n '/^DAPP_RUNNING_PATH=/p' $USER_BASH_PROFILE`;
-		if [[ $running_path ]];
-			then
-			echo "update dapp running path $DAPP_RUNNING_PATH"
-			sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
-		else
-			echo "increase dapp running path $DAPP_RUNNING_PATH"
-			sed -i "\$a DAPP_RUNNING_PATH=${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
-		fi;
+        # running path
+        running_path=`sed -n '/^DAPP_RUNNING_PATH=/p' $USER_BASH_PROFILE`;
+        if [[ $running_path ]];
+        then
+            echo "update dapp running path $DAPP_RUNNING_PATH"
+            sed -e 's!^DAPP_RUNNING_PATH=.*!DAPP_RUNNING_PATH='"${DAPP_RUNNING_PATH}"'!g' $USER_BASH_PROFILE > tmp && mv tmp $USER_BASH_PROFILE;
+        else
+            echo "increase dapp running path $DAPP_RUNNING_PATH"
+            sed -i "\$a DAPP_RUNNING_PATH=${DAPP_RUNNING_PATH}" $USER_BASH_PROFILE;
+        fi;
 
-		# export running path
-		exp_running_path=`sed -n '/^PATH=\$PATH:\$DAPP_RUNNING_PATH/p' $USER_BASH_PROFILE`;
-		if [[ ! $exp_running_path ]];
-			then
-			echo "export dapp running path $DAPP_RUNNING_PATH"
-			sed -i "\$a PATH=\$PATH:\$DAPP_RUNNING_PATH" $USER_BASH_PROFILE;
-			sed -i "\$a export PATH" $USER_BASH_PROFILE;
-		fi;
-	fi;
+        # export running path
+        exp_running_path=`sed -n '/^PATH=\$PATH:\$DAPP_RUNNING_PATH/p' $USER_BASH_PROFILE`;
+        if [[ ! $exp_running_path ]];
+        then
+            echo "export dapp running path $DAPP_RUNNING_PATH"
+            sed -i "\$a PATH=\$PATH:\$DAPP_RUNNING_PATH" $USER_BASH_PROFILE;
+            sed -i "\$a export PATH" $USER_BASH_PROFILE;
+        fi;
+    fi;
 
-	source $USER_BASH_PROFILE
+    source $USER_BASH_PROFILE
 }
 
 help()
 {
-	echo "configure OPTIONS : "
-	echo "  --help, show dapp configure options"
-	echo "  --prefix, set up dapp install path"
+    echo "configure OPTIONS : "
+    echo "  --help, show dapp configure options"
+    echo "  --prefix, set up dapp install path"
 }
 
 USER_BASH_PROFILE=~/.bash_profile
 
 DAPP_INSTALL_PATH_OLD=$DAPP_INSTALL_PATH
-echo $DAPP_INSTALL_PATH_OLD
 export DAPP_INSTALL_PATH_OLD
 
 DAPP_ROOT_PATH=$(pwd)
@@ -92,29 +91,33 @@ DAPP_CONFIG_CHANGE=false
 
 while true
 do 
-	case $1 in 
-		-p|--prefix)
-			if [ ! -d $2 ]; then 
-				mkdir -p $2
-			fi
-			DAPP_INSTALL_PATH=$2
-			DAPP_CONFIG_CHANGE=true
-			shift 2;;
-		-h|--help)
-			help
-			shift;;
-		--)
-			break;;
-		?)
-			echo "invalid options $1"
-			help
-			break;;
-	esac
+    case $1 in 
+        -p|--prefix)
+            if [ ! -d $2 ]; then 
+                mkdir -p $2
+            fi
+            DAPP_INSTALL_PATH=$2
+            DAPP_CONFIG_CHANGE=true
+            shift 2;;
+        -h|--help)
+            help
+            shift;;
+        --)
+            break;;
+        ?)
+            echo "invalid options $1"
+            help
+            break;;
+    esac
 done
 
 DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/bin:$DAPP_INSTALL_PATH/tools
 
 if [ true == $DAPP_CONFIG_CHANGE -o "" == "$DAPP_INSTALL_PATH_OLD" ]; then
-	config
-	source $USER_BASH_PROFILE
+    echo "DAPP configure start"
+    config
+    source $USER_BASH_PROFILE
+    echo "DAPP configure success"
+else
+    echo "No configuration modifications"
 fi
