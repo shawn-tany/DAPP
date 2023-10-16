@@ -17,8 +17,12 @@ ifeq ($(DAPP_ROOT_PATH),)
 $(error "Please execute configure before the first compilation")
 endif
 
+ifneq ($(DAPP_ROOT_PATH),$(PWD))
+$(error "The compilation area has changed, please re execute configure")
+endif
+
 ifeq ($(DAPP_INSTALL_PATH),)
-$(error "Please execute configure before the first compilation")
+$(error "Please execute configure before install")
 endif
 
 ALL :
@@ -32,7 +36,7 @@ clean :
 
 install :
 	@echo " install DAPP..."
-	@if [ -d "$(DAPP_INSTALL_PATH_OLD)" ]; then rm $(DAPP_INSTALL_PATH_OLD) -rf; fi
+	@if [ -d "$(DAPP_INSTALL_PATH_LAST)" ]; then rm $(DAPP_INSTALL_PATH_LAST) -rf; fi
 	@if [ ! -d "$(DAPP_INSTALL_PATH)" ]; then mkdir $(DAPP_INSTALL_PATH); fi
 	@if [ ! -d "$(DAPP_INSTALL_PATH)/cache" ]; then mkdir $(DAPP_INSTALL_PATH)/cache; fi
 	@if [ ! -d "$(PACKAGE_DIR)" ]; then mkdir $(PACKAGE_DIR); fi
