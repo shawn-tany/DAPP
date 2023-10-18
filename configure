@@ -146,7 +146,7 @@ do
             if [[ ! $2 ]]; then
                 echo "Please select a install directory"
             fi
-            if [ "$2" != "$DAPP_INSTALL_PATH_LAST" ]; then
+            if [ "$2" != "$DAPP_INSTALL_PATH" ]; then
                 DAPP_INSTALL_PATH_LAST=$DAPP_INSTALL_PATH
                 DAPP_INSTALL_PATH=$2
                 DAPP_CONFIG_CHANGE=true

@@ -27,19 +27,8 @@ CFLAGS += -I $(COMPONENTS_DIR)
 CFLAGS += -g
 CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 
-ALL :
-	@# check environment variable
-	@# create directory
-	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
-	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
+ALL : compile_check compile
 
-	@echo " make $(APP) tool..."
-	@$(CC) $(SRCS) $(LIBS) $(CFLAGS) -o $(BUILD_DIR)/bin/$(APP)
-	@echo " make $(APP) tool success!"
-	
-clean :
-	@echo " clean $(APP) tools..."
-	@rm $(BUILD_DIR)/bin/$(APP) -rf
-	@echo " clean $(APP) success!"
+clean : clean_build
 
 include $(DAPP_ROOT_PATH)/env.mk

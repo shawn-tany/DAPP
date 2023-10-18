@@ -11,6 +11,9 @@ TOOLS_DIR = $(DAPP_ROOT_PATH)/tools
 # DAPP build directory
 BUILD_DIR = $(DAPP_ROOT_PATH)/build
 
+# make flags
+MAKE_FLAGS = --no-print-directory 
+
 .PHONY : ALL clean install uninstall
 
 ifeq ($(DAPP_ROOT_PATH),)
@@ -26,23 +29,19 @@ $(error "Please execute configure before install")
 endif
 
 ALL :
-	@make --no-print-directory -f $(DAPP_ROOT_PATH)/source/Makefile
-	@make --no-print-directory -f $(DAPP_ROOT_PATH)/tools/Makefile
+	@echo "  build DAPP..."
+	@make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/source/Makefile
+	@make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/tools/Makefile
 	@echo $(BUILD_VERSION) > $(BUILD_DIR)/version
+	@echo "  build DAPP success"
 
 clean :
-	@make --no-print-directory -f source/Makefile clean
-	@make --no-print-directory -f tools/Makefile clean
+	@make $(MAKE_FLAGS) -f source/Makefile clean
+	@make $(MAKE_FLAGS) -f tools/Makefile clean
+	@rm $(BUILD_DIR) -rf
 
-install :
+install : install_check
 	@echo " install DAPP..."
-	@if [ -d "$(DAPP_INSTALL_PATH_LAST)" ]; then rm $(DAPP_INSTALL_PATH_LAST) -rf; fi
-	@if [ ! -d "$(DAPP_INSTALL_PATH)" ]; then mkdir $(DAPP_INSTALL_PATH); fi
-	@if [ ! -d "$(DAPP_INSTALL_PATH)/cache" ]; then mkdir $(DAPP_INSTALL_PATH)/cache; fi
-	@if [ ! -d "$(PACKAGE_DIR)" ]; then mkdir $(PACKAGE_DIR); fi
-	@if [ ! -d "$(PACKAGE_DIR)/bin" ]; then mkdir $(PACKAGE_DIR)/bin; fi
-	@if [ ! -d "$(PACKAGE_DIR)/tools" ]; then mkdir $(PACKAGE_DIR)/tools; fi
-
 	@# update package
 	@cp $(BUILD_DIR)/bin/* $(PACKAGE_DIR)/bin -rf
 	@cp $(BUILD_DIR)/version $(PACKAGE_DIR)/ -rf

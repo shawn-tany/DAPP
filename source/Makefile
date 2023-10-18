@@ -24,22 +24,9 @@ CFLAGS += -D DAPP_CACHE_PATH=\"$(DAPP_INSTALL_PATH)/cache\"
 CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 CFLAGS += -O0
 
-ALL :
-	@echo " make DAPP..."
-	@echo " build version $(BUILD_VERSION)"
-	
-	@# create directory
-	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
-	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
-	
-	@# compile
-	@$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/bin/$(APP) $(LIBS)
-	@echo " make success!"
+ALL : compile_check show_build_version compile
 
-clean :
-	@echo " clean DAPP..."
-	@rm $(BUILD_DIR)/bin/$(APP) -rf
-	@echo " clean success!"
+clean : clean_build
 
 include $(DAPP_ROOT_PATH)/env.mk
 include $(DAPP_ROOT_PATH)/lib/lib.mk

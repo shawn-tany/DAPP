@@ -17,25 +17,20 @@ TOOL_COMPILE_DIRS += $(TOOLS_DIR)/deamon
 TOOL_COMPILE_DIRS += $(TOOLS_DIR)/match
 TOOL_COMPILE_DIRS += $(TOOLS_DIR)/replay
 
-ALL :
-	@# check environment variable
-	@echo " make TOOLS..."
-	@# create directory
-	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
-	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
+MAKE_FLAGS = --no-print-directory 
 
-	@for dir in $(TOOL_COMPILE_DIRS);			\
-	do 							\
-	   make --no-print-directory -f $$dir/Makefile;		\
+ALL : 
+	@echo "  make tools..." 
+
+	@for dir in $(TOOL_COMPILE_DIRS);                   \
+	do                                                  \
+	   make $(MAKE_FLAGS) -f $$dir/Makefile;            \
 	done;
 
-	@# compile
-	@echo " make success!"
+	@echo "  make all tools success!"
 
 clean :
-	@for dir in $(TOOL_COMPILE_DIRS);			\
-	do 							\
-	   make --no-print-directory -f $$dir/Makefile clean;	\
+	@for dir in $(TOOL_COMPILE_DIRS);                   \
+	do                                                  \
+	   make $(MAKE_FLAGS) -f $$dir/Makefile clean;      \
 	done;
-
-	
