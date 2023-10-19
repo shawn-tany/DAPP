@@ -17,13 +17,6 @@ SRCS = $(SOURCE_DIR)/main.c
 
 # all library are stored in LIBS
 
-CFLAGS += -g
-CFLAGS += -D DAPP_DEBUG
-CFLAGS += -D DAPP_CONFIG_PATH=\"$(DAPP_INSTALL_PATH)/config\"
-CFLAGS += -D DAPP_CACHE_PATH=\"$(DAPP_INSTALL_PATH)/cache\"
-CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
-CFLAGS += -O0
-
 ALL : compile_check show_build_version compile
 
 clean : clean_build

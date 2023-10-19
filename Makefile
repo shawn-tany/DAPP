@@ -30,8 +30,8 @@ endif
 
 ALL :
 	@echo "  build DAPP..."
-	@make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/source/Makefile
-	@make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/tools/Makefile
+	@(make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/source/Makefile) || (exit 3)
+	@(make $(MAKE_FLAGS) -f $(DAPP_ROOT_PATH)/tools/Makefile)  || (exit 3)
 	@echo $(BUILD_VERSION) > $(BUILD_DIR)/version
 	@echo "  build DAPP success"
 

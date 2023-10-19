@@ -11,7 +11,7 @@
 #include "dapp_code.h"
 #include "modules.h"
 
-#define DAPP_DEFAULT_INSTALL_PATH "/home/dapp"
+#define DAPP_DFT_CONFIG_PATH "/home/dapp/log"
 #define DAPP_CONF_FILE "startup.conf"
 #define DAPP_RULE_FILE "rule.conf"
 
@@ -65,8 +65,8 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_CONF_FILE);
     snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_RULE_FILE);
 #else
-    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_DEFAULT_INSTALL_PATH, DAPP_CONF_FILE);
-    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_DEFAULT_INSTALL_PATH, DAPP_RULE_FILE);
+    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_CONF_FILE);
+    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_RULE_FILE);
 #endif
 
     /*

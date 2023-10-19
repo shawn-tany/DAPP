@@ -17,7 +17,11 @@ enum
     DEAMON_FAILED = 1,
     DEAMON_RUNNING,
     DEAMON_RESTART,
+    DEAMON_EXIT,
 } DEAMON_STATUS;
+
+#define DAPP_DFT_LOG_PATH "/home/dapp/log"
+#define DAPP_DEAMON_LOG "dapp_deamon.log"
 
 static int g_deamon_status = 0;
 
@@ -137,12 +141,20 @@ int main(int argc, char *argv[])
     pid_t pid = 0;
     int restart_times = 0;
     char *program = argv[1];
+    char deamon_log[128] = { 0 };
+    FILE *fp = NULL;
 
     if (2 > argc)
     {
         printf("please select a program\n");
         return -1;
     }
+
+#ifdef DAPP_LOG_PATH
+    snprintf(deamon_log, sizeof(deamon_log), "%s/%s", DAPP_LOG_PATH, DAPP_DEAMON_LOG);
+#else
+    snprintf(deamon_log, sizeof(deamon_log), "%s/%s", DAPP_DFT_LOG_PATH, DAPP_DEAMON_LOG);
+#endif
 
     /* Create a child process for process daemon */
     pid = fork();
@@ -158,6 +170,13 @@ int main(int argc, char *argv[])
     }
     else
     {
+        if (!(fp = fopen(deamon_log, "a+")))
+        {
+            perror("fopen");
+            printf("%s\n", deamon_log);
+            return -1;
+        }
+    
         /** 
          * Detach process from session
          * When the session exits, the process will continue to run
@@ -179,13 +198,20 @@ int main(int argc, char *argv[])
             if (DEAMON_FAILED == ret)
             {
                 printf("deamon %s failed\n", program);
-                return -1;
+                fprintf(fp, "deamon %s failed\n", program);
+                break;
             }
             /* The guarded process is abnormal, restart the process */
             else if (DEAMON_RESTART == ret)
             {
                 printf("deamon %d times\n", ++restart_times);
+                fprintf(fp, "deamon %d times\n", restart_times);
             }
+        }
+
+        if (fp)
+        {
+            fclose(fp);
         }
     }
 
