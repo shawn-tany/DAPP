@@ -210,7 +210,7 @@ static int dapp_work(void *arg)
 
     if (DAPP_OK != ret) {
         DAPP_TRACE("ERROR : module %d init fail! ERR : %d\n", type, ret);
-        return DAPP_FAIL;
+        return ret;
     }
 
     /*
@@ -220,7 +220,7 @@ static int dapp_work(void *arg)
 
     if (DAPP_OK != ret) {
         DAPP_TRACE("ERROR : module %d exec fail! ERR : %d\n", type, ret);
-       return DAPP_FAIL;
+        return ret;
     }
 
     /*
@@ -230,7 +230,7 @@ static int dapp_work(void *arg)
 
     if (DAPP_OK != ret) {
         DAPP_TRACE("ERROR : module %d exit fail! ERR : %d\n", type, ret);
-        return DAPP_FAIL;
+        return ret;
     }
     
     return 0;

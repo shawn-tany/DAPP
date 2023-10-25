@@ -17,9 +17,9 @@ LIB_DIR        = $(DAPP_ROOT_PATH)/lib
 
 # SRCS
 SRCS  = $(TOOLS_DIR)/replay/pcap_replay.c
-SRCS += $(COMPONENTS_DIR)/dapp_dir_traval.c 
-SRCS += $(COMPONENTS_DIR)/dapp_queue.c 
-SRCS += $(COMPONENTS_DIR)/dapp_stack.c 
+SRCS += $(COMPONENTS_DIR)/dirtraval/dapp_dir_traval.c 
+SRCS += $(COMPONENTS_DIR)/structure/dapp_queue.c 
+SRCS += $(COMPONENTS_DIR)/structure/dapp_stack.c 
 
 # LIBS
 LIBS  = -L $(LIB_DIR)/dpdk/lib -ldpdk -Wl,-rpath=$(LIB_DIR)/dpdk/lib
@@ -30,7 +30,8 @@ LIBS += -lpthread -lnuma -ldl -march=native
 CFLAGS  = -I $(LIB_DIR)/dpdk/include
 CFLAGS += -I $(LIB_DIR)/pcap/include
 CFLAGS += -I $(COMMON_DIR)
-CFLAGS += -I $(COMPONENTS_DIR)
+CFLAGS += -I $(COMPONENTS_DIR)/dirtraval
+CFLAGS += -I $(COMPONENTS_DIR)/structure
 
 ALL : compile_check compile
 

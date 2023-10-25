@@ -17,14 +17,17 @@ LIB_DIR        = $(DAPP_ROOT_PATH)/lib
 
 # SRCS
 SRCS  = $(TOOLS_DIR)/dir/dir_traval.c
-SRCS += $(COMPONENTS_DIR)/dapp_dir_traval.c $(COMPONENTS_DIR)/dapp_queue.c $(COMPONENTS_DIR)/dapp_stack.c
+SRCS += $(COMPONENTS_DIR)/dirtraval/dapp_dir_traval.c 
+SRCS += $(COMPONENTS_DIR)/structure/dapp_queue.c 
+SRCS += $(COMPONENTS_DIR)/structure/dapp_stack.c
 
 # LIBS
 LIBS = 
 
 # CFLAGS
 CFLAGS  = -I $(COMMON_DIR)
-CFLAGS += -I $(COMPONENTS_DIR)
+CFLAGS += -I $(COMPONENTS_DIR)/dirtraval
+CFLAGS += -I $(COMPONENTS_DIR)/structure
 
 ALL : compile_check compile
 
