@@ -66,13 +66,9 @@ UINT16_T dapp_module_lcore_num_get_by_type(DAPP_MODULES_TYPE type)
 DAPP_MODULES_TYPE dapp_module_type_get_by_lcore(UINT64_T lcore)
 {
     int i = 0;
-    UINT64_T t;
 
     for (i = 0; i < MODULES_ITEM(MODULES.module); ++i) {
-
-        DAPP_MASK_TST(MODULES.module[i].lcore.lcore_mask, lcore, t);
-    
-        if (t) {
+        if (DAPP_MASK_TST(MODULES.module[i].lcore.lcore_mask, lcore)) {
             return i;
         }
     }
@@ -80,131 +76,7 @@ DAPP_MODULES_TYPE dapp_module_type_get_by_lcore(UINT64_T lcore)
     return DAPP_MODULE_TYPE_NUM;
 }
 
-STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg)
-{
-    int ret;
-
-    if (DAPP_MODULE_TYPE_NUM <= init_type) {
-        return DAPP_ERR_MODL_TYPE;
-    }
-
-    if (!MODULES.module[init_type].reg.reg) {
-        return DAPP_ERR_MODL_UNREG;
-    }
-    
-    if (!MODULES.module[init_type].reg.init) {
-        return DAPP_ERR_MODL_INIT_NULL;
-    }
-
-    /*
-     * initialized once
-     */
-    if (!MODULES.module[init_type].rely.multi_init) {
-        ret = dapp_atomic32_cmpset(&MODULES.module[init_type].rely.has_initd, 0, 1);
-
-        if (ret == 0) {
-            DAPP_TRACE("port module only need to be initialized once!\n");
-            return DAPP_OK;
-        }
-    }
-
-    int i;
-
-    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
-
-        UINT64_T rely = 0;
-
-        DAPP_MASK_TST(MODULES.module[init_type].rely.rely_mask, i, rely);
-
-        if (rely) {
-            DAPP_MODULE_INIT_WAIT(init_type, i);
-        }
-    }
-
-    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_START);
-
-    ret = MODULES.module[init_type].reg.init(arg);
-
-    if (DAPP_OK != ret) {
-        DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_FAIL);
-        return ret;
-    }
-
-    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_OK);
-
-    return DAPP_OK;
-}
-
-STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg)
-{
-    int ret;
-
-    if (DAPP_MODULE_TYPE_NUM <= exec_type) {
-        return DAPP_ERR_MODL_TYPE;
-    }
-
-    if (!MODULES.module[exec_type].reg.reg) {
-        return DAPP_ERR_MODL_UNREG;
-    }
-    
-    if (!MODULES.module[exec_type].reg.exec) {
-        return DAPP_ERR_MODL_EXEC_NULL;
-    }
-
-    int i;
-
-    DAPP_MODULE_INIT_WAIT(exec_type, exec_type);
-    
-    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
-
-        UINT64_T rely = 0;
-
-        DAPP_MASK_TST(MODULES.module[exec_type].rely.rely_mask, i, rely);
-
-        if (rely) {
-            DAPP_MODULE_INIT_WAIT(exec_type, i);
-        }
-    }
-
-    ret = MODULES.module[exec_type].reg.exec(&MODULES.module[exec_type].lcore.running, arg);
-
-    if (DAPP_OK != ret) {
-        return ret;
-    }
-
-    return DAPP_OK;
-}
-
-STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg)
-{
-    int ret;
-
-    if (DAPP_MODULE_TYPE_NUM <= exit_type) {
-        return DAPP_ERR_MODL_TYPE;
-    }
-
-    if (!MODULES.module[exit_type].reg.reg) {
-        return DAPP_ERR_MODL_UNREG;
-    }
-
-    if (!MODULES.module[exit_type].reg.exit) {
-        return DAPP_ERR_MODL_EXIT_NULL;
-    }
-
-    ret = MODULES.module[exit_type].reg.exit(arg);
-
-    if (DAPP_OK != ret) {
-        return ret;
-    }
-
-    return DAPP_OK;
-}
-
-void dapp_module_reg(DAPP_MODULES_TYPE type, 
-                         const char *name, 
-                         dapp_module_init init, 
-                         dapp_module_exec exec, 
-                         dapp_module_exit exit)
+void dapp_module_reg(DAPP_MODULES_TYPE type, const char *name, DAPP_MODULE_OPS *module_ops)
 {
     if (DAPP_MODULE_TYPE_NUM <= type) {
         return ;
@@ -214,9 +86,7 @@ void dapp_module_reg(DAPP_MODULES_TYPE type,
      * initialize basic information of module
      */
     snprintf(MODULES.module[type].reg.name, sizeof(MODULES.module[type].reg.name), "%s", name);
-    MODULES.module[type].reg.init = init;
-    MODULES.module[type].reg.exec = exec;
-    MODULES.module[type].reg.exit = exit;
+    MODULES.module[type].reg.module_ops = module_ops;
 
     /*
      * Set module registration flag
@@ -338,5 +208,149 @@ void dapp_module_rely_uninit(DAPP_MODULES_TYPE type)
     MODULES.module[type].rely.rely_mask = 0;
     MODULES.module[type].rely.rely_num = 0;
     MODULES.module[type].rely.multi_init = 0;
+}
+
+STATUS DAPP_MODL_CONF_MACHINE(const char *file_name, void *arg)
+{
+    STATUS ret = DAPP_OK;
+    int i = 0;
+
+    if (DAPP_OK != (ret = dapp_conf_init(file_name)))
+    {
+        return ret;
+    }
+
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i)
+    {
+        if (MODULES.module[i].reg.module_ops->conf)
+        {
+            if (DAPP_OK != (ret = MODULES.module[i].reg.module_ops->conf(arg)))
+            {
+                goto DAPP_MODL_CONF_FAIL;
+            }
+        }
+    }
+
+DAPP_MODL_CONF_FAIL : 
+
+    /* release config jasson root */
+    dapp_conf_uinit();
+
+    return ret;
+}
+
+STATUS DAPP_MODL_TASK_MACHINE(UINT16_T lcore)
+{
+    return DAPP_OK;
+}
+
+STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= init_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[init_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+    
+    if (!MODULES.module[init_type].reg.module_ops->init) {
+        return DAPP_ERR_MODL_INIT_NULL;
+    }
+
+    /*
+     * initialized once
+     */
+    if (!MODULES.module[init_type].rely.multi_init) {
+        ret = dapp_atomic32_cmpset(&MODULES.module[init_type].rely.has_initd, 0, 1);
+
+        if (ret == 0) {
+            DAPP_TRACE("port module only need to be initialized once!\n");
+            return DAPP_OK;
+        }
+    }
+
+    int i;
+
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
+        if (DAPP_MASK_TST(MODULES.module[init_type].rely.rely_mask, i)) {
+            DAPP_MODULE_INIT_WAIT(init_type, i);
+        }
+    }
+
+    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_START);
+
+    ret = MODULES.module[init_type].reg.module_ops->init(arg);
+
+    if (DAPP_OK != ret) {
+        DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_FAIL);
+        return ret;
+    }
+
+    DAPP_MODULE_INIT_STATUS_SET(init_type, DAPP_MODULE_INIT_OK);
+
+    return DAPP_OK;
+}
+
+STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= exec_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[exec_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+    
+    if (!MODULES.module[exec_type].reg.module_ops->exec) {
+        return DAPP_ERR_MODL_EXEC_NULL;
+    }
+
+    int i;
+
+    DAPP_MODULE_INIT_WAIT(exec_type, exec_type);
+    
+    for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
+        if (DAPP_MASK_TST(MODULES.module[exec_type].rely.rely_mask, i)) {
+            DAPP_MODULE_INIT_WAIT(exec_type, i);
+        }
+    }
+
+    ret = MODULES.module[exec_type].reg.module_ops->exec(&MODULES.module[exec_type].lcore.running, arg);
+
+    if (DAPP_OK != ret) {
+        return ret;
+    }
+
+    return DAPP_OK;
+}
+
+STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg)
+{
+    int ret;
+
+    if (DAPP_MODULE_TYPE_NUM <= exit_type) {
+        return DAPP_ERR_MODL_TYPE;
+    }
+
+    if (!MODULES.module[exit_type].reg.reg) {
+        return DAPP_ERR_MODL_UNREG;
+    }
+
+    if (!MODULES.module[exit_type].reg.module_ops->exit) {
+        return DAPP_ERR_MODL_EXIT_NULL;
+    }
+
+    ret = MODULES.module[exit_type].reg.module_ops->exit(arg);
+
+    if (DAPP_OK != ret) {
+        return ret;
+    }
+
+    return DAPP_OK;
 }
 

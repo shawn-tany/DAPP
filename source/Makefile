@@ -26,6 +26,5 @@ include $(DAPP_ROOT_PATH)/lib/lib.mk
 include $(SOURCE_DIR)/dpdk/dpdk.mk
 include $(SOURCE_DIR)/common/common.mk
 include $(SOURCE_DIR)/components/components.mk
-include $(SOURCE_DIR)/config/config.mk
 include $(SOURCE_DIR)/modules/modules.mk
 

@@ -6,7 +6,6 @@
 #include <signal.h>
 
 #include "common.h"
-#include "startup_conf.h"
 #include "dpdk.h"
 #include "dapp_code.h"
 #include "modules.h"
@@ -20,10 +19,15 @@
 #define TRUE    (1)
 #define FALSE   (0)
 
+typedef struct
+{
+    char conf_file[CONF_FILE_NAME_SIZE];
+    char rule_file[CONF_FILE_NAME_SIZE];
+} dapp_argsopt_t;
+
 typedef struct 
 {
     char program[128];
-    dapp_conf_t conf;
     UINT64_T lcore_mask;
 } dapp_usrspace_t;
 
@@ -39,11 +43,10 @@ static void signal_handle(int sig)
     }
 }
 
-static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
+static STATUS dapp_args_paser(int argc, char **argv, dapp_argsopt_t *argsopt)
 {
-    if (!argc || !argv || !usrspace) {
-        return DAPP_ERR_PARAM;
-    }
+    PTR_CHECK(argv);
+    PTR_CHECK(argsopt);
 
     struct option long_options[] = {
         {"config",      1,  0,  's'},
@@ -54,20 +57,6 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     };
 
     int opt = 0;
-    STATUS ret = DAPP_OK;
-    char conf_file[CONF_FILE_NAME_SIZE] = {0};
-    char rule_file[CONF_FILE_NAME_SIZE] = {0};
-
-    /*
-     * Set default parameters
-     */
-#ifdef DAPP_CONFIG_PATH
-    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_CONF_FILE);
-    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_RULE_FILE);
-#else
-    snprintf(conf_file, sizeof(conf_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_CONF_FILE);
-    snprintf(rule_file, sizeof(rule_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_RULE_FILE);
-#endif
 
     /*
      * Parse command line parameters
@@ -75,10 +64,10 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     while (-1 != (opt = getopt_long(argc, argv, "c:r:vh", long_options, NULL))) {
         switch (opt) {
             case 'c' :
-                snprintf(conf_file, sizeof(conf_file), "%s", optarg);
+                snprintf(argsopt->conf_file, sizeof(argsopt->conf_file), "%s", optarg);
                 break;
             case 'r' :
-                snprintf(rule_file, sizeof(rule_file), "%s", optarg);
+                snprintf(argsopt->rule_file, sizeof(argsopt->rule_file), "%s", optarg);
                 break;
             case 'v' :
                 printf("\n"
@@ -104,44 +93,53 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
         }
     }
 
+    return DAPP_OK;
+}
+
+static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
+{
+    PTR_CHECK(argv);
+    PTR_CHECK(usrspace);
+    
+    STATUS ret = DAPP_OK;
+    dapp_argsopt_t argsopt = { 0 };
+
+    /*
+     * Set default parameters
+     */
+#ifdef DAPP_CONFIG_PATH
+    snprintf(argsopt.conf_file, sizeof(argsopt.conf_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_CONF_FILE);
+    snprintf(argsopt.rule_file, sizeof(argsopt.rule_file), "%s/%s", DAPP_CONFIG_PATH, DAPP_RULE_FILE);
+#else
+    snprintf(argsopt.conf_file, sizeof(argsopt.conf_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_CONF_FILE);
+    snprintf(argsopt.rule_file, sizeof(argsopt.rule_file), "%s/%s", DAPP_DFT_CONFIG_PATH, DAPP_RULE_FILE);
+#endif
+
+    /*
+     * paser args
+     */
+    if (DAPP_OK != (ret = dapp_args_paser(argc, argv, &argsopt)))
+    {
+        printf("ERROR : dapp args paser fail\n");
+        return ret;
+    }
+
     /*
      * program 
      */
     snprintf(usrspace->program, sizeof(usrspace->program), "%s", argv[0]);
 
-    printf("working config : %s\n", conf_file);
+    printf("working config : %s\n", argsopt.conf_file);
     
     /*
      * resolve startup configuration
      */
-    if (DAPP_OK != (ret = dapp_conf_parse(&usrspace->conf, conf_file))) {
+    if (DAPP_OK != (ret = DAPP_MODL_CONF_MACHINE(argsopt.conf_file, NULL))) {
         printf("ERROR : dapp conf parse fail\n");
         return ret;
     }
 
-    /*
-     * debug, show static configuration
-     */
-    dapp_conf_dump(&usrspace->conf);
-
-    /*
-     * Update module lcore
-     */
-    dapp_module_lcore_init(DAPP_MODULE_CONTROL, 1);
-    dapp_module_lcore_init(DAPP_MODULE_PORT, usrspace->conf.port.thread_num);
-    dapp_module_lcore_init(DAPP_MODULE_FLOWS, usrspace->conf.flows.thread_num);
-    dapp_module_lcore_init(DAPP_MODULE_PROTOCOL, usrspace->conf.protocol.thread_num);
-    dapp_module_lcore_init(DAPP_MODULE_RULE, usrspace->conf.rule.thread_num);
-    dapp_module_lcore_init(DAPP_MODULE_FILES, usrspace->conf.files.thread_num);
-
     usrspace->lcore_mask = dapp_modules_total_lcore_mask_get();
-
-    /*
-     * Update module relevance
-     */
-    dapp_module_rely_init(DAPP_MODULE_FLOWS, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_PORT);
-    dapp_module_rely_init(DAPP_MODULE_PROTOCOL, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_FLOWS);
-    dapp_module_rely_init(DAPP_MODULE_FILES, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_FLOWS);
 
     return DAPP_OK;
 }

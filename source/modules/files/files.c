@@ -15,7 +15,13 @@
 
 typedef struct 
 {
+    UINT8_T  lcore_num;    
+} dapp_files_conf_t;
+
+typedef struct 
+{
     struct rte_ring *flows_ring;
+    dapp_files_conf_t config;
 } dapp_files_ws_t;
 
 static dapp_files_ws_t files_ws;
@@ -75,7 +81,45 @@ static void dapp_pcap_close(pcap_dumper_t *dumper)
     }
 }
 
-static int dapp_files_init(void *arg)
+static STATUS dapp_files_conf(void *args)
+{
+    json_t *root = dapp_conf_root_get();    
+    json_t *obj_arr = NULL;
+    json_t *conf_obj = NULL;    
+    json_t *sub_obj = NULL;    
+    UINT32_T i = 0;
+    UINT32_T array_size = 0;
+
+    array_size = json_array_size(root);
+
+    for (i = 0; i < array_size; ++i) {
+        if (!(obj_arr = json_array_get(root, i))) {
+            return DAPP_ERR_JSON_FMT;
+        }
+
+        /* port parse */
+        if (!(conf_obj = json_object_get(obj_arr, "files"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+
+        /*
+         * Get the configuration through the json object
+         */
+        if (!(sub_obj = json_object_get(conf_obj, "thread_num"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+        files_ws.config.lcore_num = json_integer_value(sub_obj);
+    }
+
+    dapp_module_lcore_init(DAPP_MODULE_FILES, files_ws.config.lcore_num);
+    
+    dapp_module_rely_init(DAPP_MODULE_FILES, DAPP_MODULE_UNI_INIT, 1, DAPP_MODULE_FLOWS);
+
+    return DAPP_OK;
+}
+
+
+static STATUS dapp_files_init(void *arg)
 {
     DAPP_TRACE("dapp files init\n");
 
@@ -93,7 +137,7 @@ static UINT64_T deq_count = 0;
 static UINT64_T enq_count = 0;
 static UINT64_T rls_count = 0;
 
-static int dapp_files_exec(UINT8_T *running, void *arg)
+static STATUS dapp_files_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp files exec\n");
 
@@ -148,7 +192,7 @@ static int dapp_files_exec(UINT8_T *running, void *arg)
     return DAPP_OK;
 }
 
-static int dapp_files_exit(void *arg)
+static STATUS dapp_files_exit(void *arg)
 {
     DAPP_TRACE("dapp files exit\n");
 
@@ -159,7 +203,14 @@ static int dapp_files_exit(void *arg)
     return DAPP_OK;
 }
 
-DAPP_MODULE_REG_CONSTRUCTOR(DAPP_MODULE_FILES, files, dapp_files_init, dapp_files_exec, dapp_files_exit);
+static DAPP_MODULE_OPS files_ops = {
+    .conf = dapp_files_conf,
+    .init = dapp_files_init,
+    .exec = dapp_files_exec,
+    .exit = dapp_files_exit   
+};
+
+DAPP_MODULE_REG_CONSTRUCTOR(DAPP_MODULE_FILES, files, &files_ops);
 
 DAPP_MODULE_UNREG_DESTRUCTOR(DAPP_MODULE_FILES, files);
 

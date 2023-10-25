@@ -36,27 +36,27 @@ install_check :
 
 ifneq ($(quit),yes)
 compile :
-	@echo "  make $(APP)..."
+	@echo "  ## build $(APP)"
 	@for src in $(SRCS);            \
 	do                              \
 	    ($(CC) $(CFLAGS) $(LIBS) $$src -c) && (echo "  [SUCCESS] $$src") || ((echo "  [FAILED ] $$src" && (rm *.o -rf)) && (exit 1)); \
 	done;
 	@mv *.o $(BUILD_DIR)/obj/$(APP)
 	@$(CC) $(BUILD_DIR)/obj/$(APP)/*.o -o $(BUILD_DIR)/bin/$(APP)  $(CFLAGS) $(LIBS)
-	@echo "  make $(APP) success!"
+	@echo "  ## build $(APP) success!"
 else
 compile :
-	@echo "  make $(APP)..."
+	@echo "  ## build $(APP)..."
 	@$(CC) $(SRCS) -o $(BUILD_DIR)/bin/$(APP)  $(CFLAGS) $(LIBS)
-	@echo "  make $(APP) success!"
+	@echo "  ## build $(APP) success!"
 endif
 
 clean_build :
-	@echo "  clean $(APP)..."
+	@echo "  ## clean $(APP)..."
 	@rm $(BUILD_DIR)/bin/$(APP) -rf
 	@rm $(BUILD_DIR)/obj/$(APP) -rf
-	@echo "  clean $(APP) success!"
+	@echo "  ## clean $(APP) success!"
 
 show_build_version :
-	@echo "  build version $(BUILD_VERSION)"
+	@echo "  ## build version $(BUILD_VERSION)"
 

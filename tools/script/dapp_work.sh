@@ -28,20 +28,33 @@ function start {
 }
 
 function stop {
-	killall -9 dapp_deamon > /dev/null 2>&1
-	killall -2 dapp > /dev/null 2>&1
+	deamon_pid_exist=`pidof dapp_deamon`;
+	if [[ $deamon_pid_exist ]]
+	then
+	    killall -9 dapp_deamon > /dev/null 2>&1
+	    echo "dapp_deamon stop"
+	fi
+	
+	dapp_pid_exist=`pidof dapp`;
+	if [[ $dapp_pid_exist ]]
+	then
+	    killall -2 dapp > /dev/null 2>&1
+	    sleep 3
+	    echo "dapp stop"
+	fi
 	
 	$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
-
+	
 	igb_uio_exist=`lsmod |grep igb_uio`;
-
-	sleep 5
-
-	echo "dapp stop"
-
+	
 	if [[ $igb_uio_exist ]]
 	then 
 		rmmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+	fi
+	
+	if [[ ! $deamon_pid_exist && ! $dapp_pid_exist ]]
+	then
+	    echo "No DAPP program is running"
 	fi
 }
 

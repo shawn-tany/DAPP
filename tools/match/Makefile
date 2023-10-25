@@ -23,8 +23,6 @@ LIBS = -L $(LIB_DIR)/hyperscan/lib -lhs -Wl,-rpath=$(LIB_DIR)/hyperscan/lib
 
 # CFLAGS
 CFLAGS  = -I $(LIB_DIR)/hyperscan/include
-CFLAGS += -g
-CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 
 ALL : compile_check compile
 

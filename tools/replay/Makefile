@@ -31,8 +31,6 @@ CFLAGS  = -I $(LIB_DIR)/dpdk/include
 CFLAGS += -I $(LIB_DIR)/pcap/include
 CFLAGS += -I $(COMMON_DIR)
 CFLAGS += -I $(COMPONENTS_DIR)
-CFLAGS += -g
-CFLAGS += -D DAPP_BUILD_VERSION=\"$(BUILD_VERSION)\"
 
 ALL : compile_check compile
 

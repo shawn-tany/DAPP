@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include "common.h"
+#include "config.h"
 
 #define MODULES_ITEM(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -37,9 +38,18 @@ typedef enum
 
 } DAPP_INIT_OPTIONS;
 
-typedef int (*dapp_module_init)(void *);
-typedef int (*dapp_module_exec)(UINT8_T *, void *);
-typedef int (*dapp_module_exit)(void *);
+typedef STATUS (*dapp_module_conf)(void *);
+typedef STATUS (*dapp_module_init)(void *);
+typedef STATUS (*dapp_module_exec)(UINT8_T *, void *);
+typedef STATUS (*dapp_module_exit)(void *);
+
+typedef struct
+{
+    dapp_module_conf conf;
+    dapp_module_init init;
+    dapp_module_exec exec;
+    dapp_module_exit exit;
+} __attribute((__packed__)) DAPP_MODULE_OPS;
 
 typedef struct 
 {
@@ -48,9 +58,7 @@ typedef struct
         UINT8_T reg : 1;
         UINT8_T var : 7;
         char name[MODULES_NAME_SIZE];
-        dapp_module_init init;
-        dapp_module_exec exec;
-        dapp_module_exit exit;
+        DAPP_MODULE_OPS *module_ops;
     } reg;
 
     /* Usage of module lcore */
@@ -95,17 +103,7 @@ UINT16_T dapp_module_lcore_num_get_by_type(DAPP_MODULES_TYPE type);
 
 DAPP_MODULES_TYPE dapp_module_type_get_by_lcore(UINT64_T lcore);
 
-STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg);
-
-STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg);
-
-STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg);
-
-void dapp_module_reg(DAPP_MODULES_TYPE type, 
-                         const char *name, 
-                         dapp_module_init init, 
-                         dapp_module_exec exec, 
-                         dapp_module_exit exit);
+void dapp_module_reg(DAPP_MODULES_TYPE type, const char *name, DAPP_MODULE_OPS *module_ops);
 
 void dapp_module_unreg(DAPP_MODULES_TYPE type);
 
@@ -117,6 +115,16 @@ void dapp_module_rely_init(DAPP_MODULES_TYPE type, UINT8_T multi_init, int rely_
 
 void dapp_module_rely_uninit(DAPP_MODULES_TYPE type);
 
+STATUS DAPP_MODL_CONF_MACHINE(const char *file_name, void *arg);
+
+STATUS DAPP_MODL_TASK_MACHINE(UINT16_T lcore);
+
+STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg);
+
+STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg);
+
+STATUS DAPP_MODL_EXIT_MACHINE(DAPP_MODULES_TYPE exit_type, void *arg);
+
 /*
  * Macro of modules registration
  */
@@ -126,9 +134,9 @@ void dapp_module_rely_uninit(DAPP_MODULES_TYPE type);
 #define _DAPP_MODULE_UNREG(module) dapp_module_unreg_##module
 #define DAPP_MODULE_UNREG(module) _DAPP_MODULE_UNREG(module)
 
-#define DAPP_MODULE_REG_CONSTRUCTOR(type, name, init, exec, exit)   \
+#define DAPP_MODULE_REG_CONSTRUCTOR(type, name, module_ops)   \
     static void __attribute__((constructor)) DAPP_MODULE_REG(name)() {   \
-        dapp_module_reg(type, #name, init, exec, exit);             \
+        dapp_module_reg(type, #name, module_ops);             \
     }
 
 #define DAPP_MODULE_UNREG_DESTRUCTOR(type, name)                    \

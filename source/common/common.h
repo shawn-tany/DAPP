@@ -36,6 +36,8 @@ typedef enum
     DAPP_ERR_MODL_INIT_NULL,
     DAPP_ERR_MODL_EXEC_NULL,
     DAPP_ERR_MODL_EXIT_NULL,
+
+    DAPP_ERR_PORT_
 } STATUS;
 
 #ifdef DAPP_DEBUG
@@ -43,6 +45,12 @@ typedef enum
 #else
     #define DAPP_TRACE(format, ...) do { } while(0)
 #endif
+
+#define PTR_CHECK(ptr)          \
+    if (!ptr)                   \
+    {                           \
+        return DAPP_ERR_PARAM;  \
+    }
 
 #define ITEM(a) (sizeof(a) / sizeof((a)[0]))
 

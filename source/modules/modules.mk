@@ -1,6 +1,7 @@
 MODULES_DIR = $(SOURCE_DIR)/modules
 
 SRCS += $(MODULES_DIR)/modules.c
+SRCS += $(MODULES_DIR)/config.c
 
 CFLAGS += -I $(MODULES_DIR)
 

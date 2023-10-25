@@ -20,14 +20,14 @@ TOOL_COMPILE_DIRS += $(TOOLS_DIR)/replay
 MAKE_FLAGS = --no-print-directory 
 
 ALL : 
-	@echo "  make tools..." 
+	@echo "  build tools..." 
 
 	@for dir in $(TOOL_COMPILE_DIRS);                       \
 	do                                                      \
 	   (make $(MAKE_FLAGS) -f $$dir/Makefile) || (exit 2);  \
 	done;
 
-	@echo "  make all tools success!"
+	@echo "  build all tools success!"
 
 clean :
 	@for dir in $(TOOL_COMPILE_DIRS);                       \

@@ -10,7 +10,19 @@
 #include "rte_errno.h"
 
 #define MAC_PRINT(mac) printf("%02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5])
-#define DAPP_RX_MBUFS (8)
+
+#define DAPP_RX_MBUFS       (8)
+#define DAPP_PORT_NAME_SIZE (64)
+#define DAPP_MAX_PORT_NUM   (64)
+
+typedef struct 
+{
+    UINT8_T  lcore_num;    
+    UINT8_T  port_num;
+    UINT16_T mempool_node_size;
+    UINT32_T mempool_node_num;
+    char     ports[DAPP_MAX_PORT_NUM][DAPP_PORT_NAME_SIZE];
+} dapp_port_conf_t;
 
 typedef struct 
 {
@@ -19,6 +31,8 @@ typedef struct
 
     struct rte_mempool *rx_mempool;
     struct rte_ring *pkts_ring;
+
+    dapp_port_conf_t config;
 } dapp_port_ws_t;
 
 static struct rte_eth_conf dev_conf_default = {
@@ -29,7 +43,78 @@ static struct rte_eth_conf dev_conf_default = {
 
 static dapp_port_ws_t port_ws;
 
-static int dapp_port_init(void *arg)
+static STATUS dapp_port_conf(void *args)
+{
+    json_t *root = dapp_conf_root_get();    
+    json_t *obj_arr = NULL;
+    json_t *conf_obj = NULL;    
+    json_t *sub_obj = NULL;    
+    json_t *obj = NULL;
+    UINT32_T i = 0;
+    UINT32_T j = 0;
+    UINT32_T array_size = 0;
+    UINT32_T sub_arr_size = 0;
+
+    array_size = json_array_size(root);
+
+    for (i = 0; i < array_size; ++i) {
+        if (!(obj_arr = json_array_get(root, i))) {
+            return DAPP_ERR_JSON_FMT;
+        }
+
+        /* port parse */
+        if (!(conf_obj = json_object_get(obj_arr, "port"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+
+        /*
+         * Get the configuration through the json object
+         */
+        if (!(sub_obj = json_object_get(conf_obj, "thread_num"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+        port_ws.config.lcore_num = json_integer_value(sub_obj);
+
+        if (!(sub_obj = json_object_get(conf_obj, "mempool"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+
+        if (!(obj = json_object_get(sub_obj, "node_size"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+        port_ws.config.mempool_node_size = json_integer_value(obj);
+
+        if (!(obj = json_object_get(sub_obj, "node_num"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+        port_ws.config.mempool_node_num = json_integer_value(obj);
+
+        if (!(sub_obj = json_object_get(conf_obj, "port_list"))) {
+            return DAPP_ERR_JSON_CONF;
+        }
+
+        if (!json_is_array(sub_obj)) {
+            return DAPP_ERR_JSON_FMT;
+        }
+
+        sub_arr_size = json_array_size(sub_obj);
+
+        for (j = 0; j < sub_arr_size; ++j) {
+            if (!(obj = json_array_get(sub_obj, j))) {
+                return DAPP_ERR_JSON_FMT;
+            }
+            
+            memcpy(port_ws.config.ports[i], json_string_value(obj), sizeof(port_ws.config.ports[i]));
+            port_ws.config.port_num++;
+        }
+    }
+
+    dapp_module_lcore_init(DAPP_MODULE_PORT, port_ws.config.lcore_num);
+
+    return DAPP_OK;
+}
+
+static STATUS dapp_port_init(void *arg)
 {
     DAPP_TRACE("dapp port init start\n");
 
@@ -158,7 +243,7 @@ static int dapp_port_init(void *arg)
     return DAPP_OK;
 }
 
-static int dapp_port_exec(UINT8_T *running, void *arg)
+static STATUS dapp_port_exec(UINT8_T *running, void *arg)
 {
     DAPP_TRACE("dapp port exec start\n");
 
@@ -239,14 +324,21 @@ static int dapp_port_exec(UINT8_T *running, void *arg)
     return DAPP_OK;
 }
 
-static int dapp_port_exit(void *arg)
+static STATUS dapp_port_exit(void *arg)
 {
     DAPP_TRACE("dapp port exit\n");
 
     return DAPP_OK;
 }
 
-DAPP_MODULE_REG_CONSTRUCTOR(DAPP_MODULE_PORT, port, dapp_port_init, dapp_port_exec, dapp_port_exit);
+static DAPP_MODULE_OPS port_ops = {
+    .conf = dapp_port_conf,
+    .init = dapp_port_init,
+    .exec = dapp_port_exec,
+    .exit = dapp_port_exit   
+};
+
+DAPP_MODULE_REG_CONSTRUCTOR(DAPP_MODULE_PORT, port, &port_ops);
 
 DAPP_MODULE_UNREG_DESTRUCTOR(DAPP_MODULE_PORT, port);
 
