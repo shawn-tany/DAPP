@@ -39,7 +39,6 @@ clean :
 	@make $(MAKE_FLAGS) -f source/Makefile clean
 	@make $(MAKE_FLAGS) -f tools/Makefile clean
 	@rm $(BUILD_DIR) -rf
-	@rm $(PACKAGE_DIR) -rf
 
 install : install_check
 	@echo " install DAPP..."
