@@ -96,6 +96,25 @@ int dapp_dequeue(dapp_queue_t *queue, void *node, int size)
     return 0;
 }
 
+int dapp_queue_head(dapp_queue_t *queue, void *node, int size)
+{
+    PTR_CHECK(queue);
+    PTR_CHECK(node);
+    PTR_CHECK(queue->addr);
+
+    if (queue->avail == queue->total) {
+        return -4;
+    }
+
+    if (queue->offset < size) {
+        return -5;
+    }
+
+    memcpy(node, queue->cons, size);
+
+    return 0;
+}
+
 void dapp_queue_free(dapp_queue_t *queue)
 {
     if (queue) {

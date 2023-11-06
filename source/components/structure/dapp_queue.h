@@ -19,4 +19,6 @@ int dapp_enqueue(dapp_queue_t *queue, void *node, int size);
 
 int dapp_dequeue(dapp_queue_t *queue, void *node, int size);
 
+int dapp_queue_head(dapp_queue_t *queue, void *node, int size);
+
 #endif

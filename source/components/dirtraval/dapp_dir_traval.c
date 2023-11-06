@@ -1,147 +1,230 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "dapp_queue.h"
-#include "dapp_stack.h"
 #include "dapp_dir_traval.h"
 
-static int dir_node_enqueue(dapp_queue_t *queue, const char *fname, int is_dir, int depth)
-{
+#define PTR_CHECK(p)            \
+    if (!p)                     \
+        return DIR_ERR_PARAM;   \
+
+static DIR_STATUS_T dir_node_enqueue(dapp_queue_t *queue, const char *fname, int is_dir, int depth)
+{    
+    PTR_CHECK(queue);
+    PTR_CHECK(fname);
+
     dir_node_t node;
 
     snprintf(node.d_name, sizeof(node.d_name), "%s", fname);
     node.is_dir = is_dir;
     node.depth = depth;
 
-    return dapp_enqueue(queue, &node, sizeof(node));
-}
-
-static int dir_node_enstack(dapp_stack_t *stack, const char *fname, int is_dir, int depth)
-{
-    dir_node_t node;
-
-    snprintf(node.d_name, sizeof(node.d_name), "%s", fname);
-    node.is_dir = is_dir;
-    node.depth = depth;
-
-    return dapp_enstack(stack, &node, sizeof(node));
-}
-
-int dir_push(dapp_queue_t **queue, const char *path, int file_num)
-{
-    if (!path) {
-        goto TRAVAL_FAILED;
+    if (0 != dapp_enqueue(queue, &node, sizeof(node)))
+    {
+        return DIR_ERR_ENQUEUE;
     }
+    
+    return DIR_SUCCESS;
+}
 
-    dapp_stack_t *dir_stack = NULL;
+static DIR_STATUS_T dir_node_enstack(dapp_stack_t *stack, const char *fname, int is_dir, int depth)
+{
+    PTR_CHECK(stack);
+    PTR_CHECK(fname);
 
-    dir_node_t dir_node;
+    dir_node_t node;
+
+    snprintf(node.d_name, sizeof(node.d_name), "%s", fname);
+    node.is_dir = is_dir;
+    node.depth = depth;
+
+    if (0 != dapp_enstack(stack, &node, sizeof(node)))
+    {
+        return DIR_ERR_ENSTACK;
+    }
+    
+    return DIR_SUCCESS;
+}
+
+DIR_STATUS_T dir_init(dir_ctx_t **ctx, const char *path, int file_num)
+{
+    PTR_CHECK(ctx);
+    PTR_CHECK(path);
+
+    DIR_STATUS_T ret = DIR_SUCCESS;
+    struct stat st;
 
     if (access(path, F_OK))
     {
+        ret = DIR_ERR_NOSUCH;
         goto TRAVAL_FAILED;
     }
 
-    (*queue) = dapp_queue_create(file_num, sizeof(dir_node_t));
+    (*ctx) = (dir_ctx_t *)malloc(sizeof(dir_ctx_t));
 
-    if (!(*queue)) {
+    if (!(*ctx))
+    {
+        ret = DIR_ERR_MEM;
         goto TRAVAL_FAILED;
     }
 
-    dir_stack = dapp_stack_create(file_num, sizeof(dir_node_t));
+    (*ctx)->queue = dapp_queue_create(file_num, sizeof(dir_node_t));
 
-    if (!dir_stack) {
+    if (!(*ctx)->queue)
+    {
+        ret = DIR_ERR_CRTQUEUE;
         goto TRAVAL_FAILED;
     }
-    
-    struct stat st;
+
+    (*ctx)->stack = dapp_stack_create(file_num, sizeof(dir_node_t));
+
+    if (!(*ctx)->stack) 
+    {
+        ret = DIR_ERR_CRTSTACK;
+        goto TRAVAL_FAILED;
+    }
 
     stat(path, &st);
+
+    (*ctx)->is_dir = 1;
     
-    if (!S_ISDIR(st.st_mode)) {
-        dir_node_enqueue((*queue), path, 0, 0);
-    } else {
-        
-        DIR *pDir = NULL;
-        char f_name[512] = {0};
-
-        dir_node_enstack(dir_stack, path, 1, 0);
-
-        while (!dapp_destack(dir_stack, &dir_node, sizeof(dir_node))) {
-
-            dir_node_enqueue((*queue), dir_node.d_name, 1, dir_node.depth);
-        
-            /*
-             * Open directory
-             */
-            pDir = opendir(dir_node.d_name);
-
-            if (!pDir) {
-                continue;
-            }
-
-            struct dirent* ent = NULL;
-
-            /*
-             * Traval directory
-             */
-            while ((ent = readdir(pDir)))
-            {
-                if (!strncmp(ent->d_name, ".", strlen(".")) || 
-                    !strncmp(ent->d_name, "..", strlen(".."))) {
-                    continue;
-                }
-
-                if ('/' == dir_node.d_name[strlen(dir_node.d_name) - 1]) {
-                    snprintf(f_name, sizeof(f_name), "%s%s", dir_node.d_name, ent->d_name);
-                } else {
-                    snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
-                }
-
-                /*
-                 * Is directory
-                 */
-                if (DT_DIR == ent->d_type) {
-                    dir_node_enstack(dir_stack, f_name, 1, dir_node.depth + 1);
-                } else {
-                    dir_node_enqueue((*queue), f_name, 0, dir_node.depth + 1);
-                }
-            }
-        }
+    if (!S_ISDIR(st.st_mode))
+    {
+        (*ctx)->is_dir = 0;
+        dir_node_enqueue((*ctx)->queue, path, (*ctx)->is_dir, 0);
     }
+    
+    dir_node_enstack((*ctx)->stack, path, (*ctx)->is_dir, 0);
 
-    dapp_stack_free(dir_stack);
+    (*ctx)->last_depth = -1;
 
-    return 0;
+    return DIR_SUCCESS;
 
 TRAVAL_FAILED :
 
-    dapp_stack_free(dir_stack);
-    dapp_queue_free((*queue));
+    dapp_stack_free((*ctx)->stack);
+    dapp_queue_free((*ctx)->queue);
 
-    *queue = NULL;
+    free((*ctx));
+    (*ctx) = NULL;
 
-    return -1;
+    return ret;
 }
 
-int dir_pop(dapp_queue_t *queue, dir_node_t *node)
+DIR_STATUS_T dir_uinit(dir_ctx_t *ctx)
 {
-    if (!queue || !node) {
-        return -1;
+    if (ctx->queue)
+    {
+        dapp_queue_free(ctx->queue);
     }
 
-    if (queue->avail == queue->total) {
-        
-        dapp_queue_free(queue);
-        
-        return 1;
+    if (ctx->stack)
+    {
+        dapp_stack_free(ctx->stack);
     }
 
-    dapp_dequeue(queue, node, sizeof(*node));
+    if (ctx)
+    {
+        free(ctx);
+    }
 
-    return 0;
+    return DIR_SUCCESS;
+}
+
+DIR_STATUS_T dir_push(dir_ctx_t *ctx)
+{
+    PTR_CHECK(ctx);
+
+    DIR *pDir = NULL;
+    char f_name[512] = {0};
+    dir_node_t dir_node = {0};
+    DIR_STATUS_T ret = DIR_SUCCESS;
+
+    if (!ctx->is_dir)
+    {
+        return DIR_SUCCESS;
+    }
+
+    while (!dapp_stack_top(ctx->stack, &dir_node, sizeof(dir_node)))
+    {
+        if (ctx->last_depth == dir_node.depth)
+        {
+            return DIR_DEPTH_OVER;
+        }
+
+        dapp_destack(ctx->stack, &dir_node, sizeof(dir_node));
+        
+        if (DIR_SUCCESS != (ret = dir_node_enqueue(ctx->queue, dir_node.d_name, 1, dir_node.depth)))
+        {
+            return ret;
+        }
+    
+        pDir = opendir(dir_node.d_name);
+
+        if (!pDir) 
+        {
+            return DIR_ERR_DIR;
+        }
+
+        struct dirent* ent = NULL;
+
+        while ((ent = readdir(pDir)))
+        {
+            if (!strncmp(ent->d_name, ".", strlen(".")) || 
+                !strncmp(ent->d_name, "..", strlen(".."))) 
+            {
+                continue;
+            }
+
+            if ('/' == dir_node.d_name[strlen(dir_node.d_name) - 1])
+            {
+                snprintf(f_name, sizeof(f_name), "%s%s", dir_node.d_name, ent->d_name);
+            } 
+            else 
+            {
+                snprintf(f_name, sizeof(f_name), "%s/%s", dir_node.d_name, ent->d_name);
+            }
+
+            if (DT_DIR == ent->d_type) 
+            {
+                if (DIR_SUCCESS != (ret = dir_node_enstack(ctx->stack, f_name, 1, dir_node.depth + 1)))
+                {
+                    return ret;
+                }
+            } 
+            else 
+            {
+                if (DIR_SUCCESS != (ret = dir_node_enqueue(ctx->queue, f_name, 0, dir_node.depth + 1)))
+                {
+                    return ret;
+                }
+            }
+        }
+
+        closedir(pDir);
+    }
+
+    return DIR_SUCCESS;
+}
+
+DIR_STATUS_T dir_pop(dir_ctx_t *ctx, dir_node_t *node)
+{
+    PTR_CHECK(ctx);
+    PTR_CHECK(node);
+    
+    if (ctx->queue->avail == ctx->queue->total) 
+    {        
+        return DIR_ALL_OVER;
+    }
+
+    if (0 != dapp_dequeue(ctx->queue, node, sizeof(*node)))
+    {
+        return DIR_ERR_DEQUEUE;
+    }
+
+    return DIR_SUCCESS;
 }

@@ -21,9 +21,11 @@ endif
 compile_check :
 	@# create directory
 	@if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi 
-	@if [ ! -d "$(BUILD_DIR)/bin" ]; then mkdir $(BUILD_DIR)/bin; fi
+	@if [ ! -d "$(BUILD_DIR)/app" ]; then mkdir $(BUILD_DIR)/app; fi
 	@if [ ! -d "$(BUILD_DIR)/obj" ]; then mkdir $(BUILD_DIR)/obj; fi
 	@if [ ! -d "$(BUILD_DIR)/obj/$(APP)" ]; then mkdir $(BUILD_DIR)/obj/$(APP); fi
+	@if [ ! -d "$(BUILD_DIR)/obj/lowly" ]; then mkdir $(BUILD_DIR)/obj/lowly; fi
+	@if [ ! -d "$(BUILD_DIR)/obj/lowly/$(APP)" ]; then mkdir $(BUILD_DIR)/obj/lowly/$(APP); fi
 
 install_check :
 	@if [ -d "$(DAPP_INSTALL_PATH_LAST)" ]; then rm $(DAPP_INSTALL_PATH_LAST) -rf; fi
@@ -31,29 +33,32 @@ install_check :
 	@if [ ! -d "$(DAPP_INSTALL_PATH)/cache" ]; then mkdir $(DAPP_INSTALL_PATH)/cache; fi
 	@if [ ! -d "$(DAPP_INSTALL_PATH)/log" ]; then mkdir $(DAPP_INSTALL_PATH)/log; fi
 	@if [ ! -d "$(PACKAGE_DIR)" ]; then mkdir $(PACKAGE_DIR); fi
-	@if [ ! -d "$(PACKAGE_DIR)/bin" ]; then mkdir $(PACKAGE_DIR)/bin; fi
+	@if [ ! -d "$(PACKAGE_DIR)/app" ]; then mkdir $(PACKAGE_DIR)/app; fi
 	@if [ ! -d "$(PACKAGE_DIR)/tools" ]; then mkdir $(PACKAGE_DIR)/tools; fi
 
-ifneq ($(quit),yes)
 compile :
-	@echo "  ## build $(APP)"
+	@echo "  ## build $(APP) $(lowly)"
+ifneq ($(quit),yes)
 	@for src in $(SRCS);            \
 	do                              \
 	    ($(CC) $(CFLAGS) $(LIBS) $$src -c) && (echo "  [SUCCESS] $$src") || ((echo "  [FAILED ] $$src" && (rm *.o -rf)) && (exit 1)); \
 	done;
+ifneq ($(lowly),yes)
 	@mv *.o $(BUILD_DIR)/obj/$(APP)
-	@$(CC) $(BUILD_DIR)/obj/$(APP)/*.o -o $(BUILD_DIR)/bin/$(APP)  $(CFLAGS) $(LIBS)
-	@echo "  ## build $(APP) success!"
+	@$(CC) $(BUILD_DIR)/obj/$(APP)/*.o -o $(BUILD_DIR)/app/$(APP)  $(CFLAGS) $(LIBS)
+	@rm -rf *.o $(BUILD_DIR)/obj/$(APP)
 else
-compile :
-	@echo "  ## build $(APP)..."
-	@$(CC) $(SRCS) -o $(BUILD_DIR)/bin/$(APP)  $(CFLAGS) $(LIBS)
-	@echo "  ## build $(APP) success!"
+	@mv *.o $(BUILD_DIR)/obj/lowly/$(APP)
+	@$(CC) $(BUILD_DIR)/obj/lowly/$(APP)/*.o -o $(BUILD_DIR)/app/$(APP)  $(CFLAGS) $(LIBS)
 endif
+else
+	@$(CC) $(SRCS) -o $(BUILD_DIR)/app/$(APP)  $(CFLAGS) $(LIBS)
+endif
+	@echo "  ## build $(APP) success!"
 
 clean_build :
 	@echo "  ## clean $(APP)..."
-	@rm $(BUILD_DIR)/bin/$(APP) -rf
+	@rm $(BUILD_DIR)/app/$(APP) -rf
 	@rm $(BUILD_DIR)/obj/$(APP) -rf
 	@echo "  ## clean $(APP) success!"
 

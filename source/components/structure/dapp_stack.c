@@ -96,6 +96,29 @@ int dapp_destack(dapp_stack_t *stack, void *node, int size)
     return 0;
 }
 
+int dapp_stack_top(dapp_stack_t *stack, void *node, int size)
+{
+    PTR_CHECK(stack);
+    PTR_CHECK(node);
+    PTR_CHECK(stack->addr);
+
+    if (stack->avail == stack->total) {
+        return -4;
+    }
+
+    if (stack->offset < size) {
+        return -5;
+    }
+
+    void *top = NULL;
+
+    top = stack->prod - stack->offset;
+
+    memcpy(node, top, size);
+    
+    return 0;
+}
+
 void dapp_stack_free(dapp_stack_t *stack)
 {
     if (stack) {

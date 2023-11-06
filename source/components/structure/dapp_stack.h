@@ -17,6 +17,8 @@ int dapp_enstack(dapp_stack_t *stack, void *node, int size);
 
 int dapp_destack(dapp_stack_t *stack, void *node, int size);
 
+int dapp_stack_top(dapp_stack_t *stack, void *node, int size);
+
 void dapp_stack_free(dapp_stack_t *stack);
 
 #endif

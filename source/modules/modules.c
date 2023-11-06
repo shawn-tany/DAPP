@@ -8,7 +8,7 @@ static DAPP_MODULES_TABLE MODULES;
 
 #define DAPP_MODULE_WAIT_TIMES (15)
 
-#define DAPP_MODULE_INIT_WAIT(init_type, wait_type) {                               \
+#define DAPP_MODULE_RELY_WAIT(init_type, wait_type) {                               \
                                                                                     \
     UINT32_T times = 0;                                                             \
                                                                                     \
@@ -276,7 +276,7 @@ STATUS DAPP_MODL_INIT_MACHINE(DAPP_MODULES_TYPE init_type, void *arg)
 
     for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
         if (DAPP_MASK_TST(MODULES.module[init_type].rely.rely_mask, i)) {
-            DAPP_MODULE_INIT_WAIT(init_type, i);
+            DAPP_MODULE_RELY_WAIT(init_type, i);
         }
     }
 
@@ -312,11 +312,11 @@ STATUS DAPP_MODL_EXEC_MACHINE(DAPP_MODULES_TYPE exec_type, void *arg)
 
     int i;
 
-    DAPP_MODULE_INIT_WAIT(exec_type, exec_type);
+    DAPP_MODULE_RELY_WAIT(exec_type, exec_type);
     
     for (i = 0; i < DAPP_MODULE_TYPE_NUM; ++i) {
         if (DAPP_MASK_TST(MODULES.module[exec_type].rely.rely_mask, i)) {
-            DAPP_MODULE_INIT_WAIT(exec_type, i);
+            DAPP_MODULE_RELY_WAIT(exec_type, i);
         }
     }
 

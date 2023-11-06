@@ -134,7 +134,6 @@ static STATUS dapp_files_init(void *arg)
 }
 
 static UINT64_T deq_count = 0;
-static UINT64_T enq_count = 0;
 static UINT64_T rls_count = 0;
 
 static STATUS dapp_files_exec(UINT8_T *running, void *arg)
@@ -197,7 +196,6 @@ static STATUS dapp_files_exit(void *arg)
     DAPP_TRACE("dapp files exit\n");
 
     DAPP_TRACE("module files dequeue form ring(%s)  count = %llu\n", files_ws.flows_ring->name, deq_count);
-    DAPP_TRACE("module files enqueue form ring(%s)  count = %llu\n", files_ws.flows_ring->name, enq_count);
     DAPP_TRACE("module files free mbuf count = %llu\n", rls_count);
 
     return DAPP_OK;

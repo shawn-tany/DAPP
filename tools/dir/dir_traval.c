@@ -21,29 +21,50 @@ int main(int argc, char *argv[ ])
         return -1;
     }
 
-    dapp_queue_t *queue = NULL;
+    dir_ctx_t *ctx = NULL;
+    DIR_STATUS_T ret = DIR_SUCCESS;
 
-    if (dir_push(&queue, path, 102400)) {
-        printf("ERROR : failed to push dir!\n");
-        return -1;
+    if (DIR_SUCCESS != (ret = dir_init(&ctx, path, 10000)))
+    {
+        return ret;
     }
 
     dir_node_t node;
     int i;
 
-    while (!dir_pop(queue, &node)) {
+    do 
+    {
+        ret = dir_push(ctx);
 
-        for (i = 0; i < node.depth; ++i) {
-            printf("  ");
+        if (DIR_DEPTH_OVER != ret && DIR_SUCCESS != ret)
+        {
+            goto DIRTRAVEL_FAIL;
         }
 
-        if (!node.is_dir) {
-            printf("|");
-        } else {
-            printf("+");
-        }
+        while (DIR_SUCCESS == dir_pop(ctx, &node))
+        {
+            for (i = 0; i < node.depth; ++i)
+            {
+                printf("  ");
+            }
 
-        printf("%s\n", node.d_name);
-    }
+            if (!node.is_dir)
+            {
+                printf("|");
+            } 
+            else 
+            {
+                printf("+");
+            }
+
+            printf("%s\n", node.d_name);
+        }
+    } while (DIR_DEPTH_OVER == ret);
+
+DIRTRAVEL_FAIL :
+
+    dir_uinit(ctx);
+
+    return 0;
 }
 

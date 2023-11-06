@@ -23,6 +23,7 @@ static struct {
     char pcap_path[256];
     int is_dir;
     int core_num;
+    dir_ctx_t *dirctx;
     struct rte_ring *pkts_ring;
     struct rte_mempool *replay_pool;
 } pcap_replay_ctx;
@@ -186,25 +187,80 @@ static int pcap_file_replay(const char *path)
     return 0;
 }
 
-static int pcap_dir_replay(const char *path)
+static int pcap_dir_replay(void)
 {
-    dapp_queue_t *queue = NULL;
     dir_node_t node;
+    int ret = DIR_SUCCESS;
 
-    if (dir_push(&queue, path, 10240)) {
-        printf("failed to push dir\n");
+    do 
+    {
+        ret = dir_push(pcap_replay_ctx.dirctx);
+
+        if (DIR_DEPTH_OVER != ret && DIR_SUCCESS != ret)
+        {
+            return ret;
+        }
+    
+        while (DIR_SUCCESS == dir_pop(pcap_replay_ctx.dirctx, &node))
+        {
+            if (node.is_dir) 
+            {
+                printf("replay dir %s\n", node.d_name);
+            } 
+            else 
+            {
+                printf("replay file %s\n", node.d_name);
+
+                pcap_file_replay(node.d_name);
+            }
+        }
+    }while (ret == DIR_DEPTH_OVER);
+
+    return 0;
+}
+
+static int pcap_replay_init(const char *path)
+{
+    /*
+     * init ring
+     */
+    pcap_replay_ctx.pkts_ring = rte_ring_lookup("PKTS_RING");
+
+    if (!pcap_replay_ctx.pkts_ring) 
+    {
+        printf("Can not find ring %s\n", "PKTS_RING");
+        return 0;
+    }
+
+    pcap_replay_ctx.replay_pool = rte_mempool_lookup("DAPP_PCAP_REPLAY_POOL");
+
+    if (!pcap_replay_ctx.replay_pool) 
+    {
+        
+        pcap_replay_ctx.replay_pool = 
+            rte_mempool_create("DAPP_PCAP_REPLAY_POOL", 102400, RTE_MBUF_DEFAULT_BUF_SIZE, 
+                               RTE_CACHE_LINE_SIZE, 0, rte_pktmbuf_pool_init, NULL, 
+                               rte_pktmbuf_init, NULL, rte_socket_id(), 0);
+
+        if (!pcap_replay_ctx.replay_pool) 
+        {
+            printf("pktmbuf pool %s create fail! ERR : %s\n", "DAPP_PCAP_REPLAY_POOL",  rte_strerror(rte_errno));        
+            return -1;
+        }
+    }
+
+    if (DIR_SUCCESS != dir_init(&pcap_replay_ctx.dirctx, path, 10240))
+    {
+        printf("Can not init directory %s\n", path);
         return -1;
     }
 
-    while (!dir_pop(queue, &node)) {
-        if (node.is_dir) {
-            printf("replay dir %s\n", node.d_name);
-        } else {
-            printf("replay file %s\n", node.d_name);
+    return 0;
+}
 
-            pcap_file_replay(node.d_name);
-        }
-    }
+static int pcap_replay_exit(void)
+{
+    dir_uinit(pcap_replay_ctx.dirctx);
 
     return 0;
 }
@@ -212,37 +268,16 @@ static int pcap_dir_replay(const char *path)
 /*
  * pcap replay work
  */
-int pcap_replay_work(void *argv)
+static int pcap_replay_work(void *argv)
 {
     printf("pcap_replay...\n");
-
-    /*
-     * init ring
-     */
-    pcap_replay_ctx.pkts_ring = rte_ring_lookup("PKTS_RING");
-
-    if (!pcap_replay_ctx.pkts_ring) {
-        printf("Can not find ring %s\n", "PKTS_RING");
-        return 0;
-    }
-
-    pcap_replay_ctx.replay_pool = rte_mempool_lookup("DAPP_PCAP_REPLAY_POOL");
-
-    if (!pcap_replay_ctx.replay_pool) {
         
-        pcap_replay_ctx.replay_pool = rte_mempool_create("DAPP_PCAP_REPLAY_POOL", 102400, RTE_MBUF_DEFAULT_BUF_SIZE, 
-                                                     RTE_CACHE_LINE_SIZE, 0, rte_pktmbuf_pool_init, NULL, 
-                                                     rte_pktmbuf_init, NULL, rte_socket_id(), 0);
-
-        if (!pcap_replay_ctx.replay_pool) {
-            printf("pktmbuf pool %s create fail! ERR : %s\n", "DAPP_PCAP_REPLAY_POOL",  rte_strerror(rte_errno));        
-            return -1;
-        }
-    }
-        
-    if (pcap_replay_ctx.is_dir) {
-        pcap_dir_replay(pcap_replay_ctx.pcap_path);
-    } else {
+    if (pcap_replay_ctx.is_dir) 
+    {
+        pcap_dir_replay();
+    } 
+    else 
+    {
         pcap_file_replay(pcap_replay_ctx.pcap_path);
     }
 
@@ -281,20 +316,26 @@ int main(int argc, char *argv[ ])
     /*
      * dpdk init
      */
-    if (0 > rte_eal_init(argc1, argv1)) {
+    if (0 > rte_eal_init(argc1, argv1))
+    {
         return -1;
     }
 
     UINT16_T lcore_id;
 
+    pcap_replay_init(pcap_replay_ctx.pcap_path);
+
     /*
      * dpdk run
      */
-    RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+    RTE_LCORE_FOREACH_SLAVE(lcore_id)
+    {
         rte_eal_remote_launch(pcap_replay_work, NULL, lcore_id);
     }
 
     pcap_replay_work(NULL);
+
+    pcap_replay_exit();
 
     /*
      * dpdk exit
