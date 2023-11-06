@@ -182,7 +182,7 @@ if [ false == $DAPP_INSTALL_PATH_CONFIG ]; then
     fi
 fi
 # ---------------->>
-DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/bin:$DAPP_INSTALL_PATH/tools
+DAPP_RUNNING_PATH=$DAPP_INSTALL_PATH/app:$DAPP_INSTALL_PATH/tools
 #-----------------<<
 
 # -------------------------------------

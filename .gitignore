@@ -1,6 +1,6 @@
 SDK
 build
-package/bin
+package/app
 package/*.tar.gz
 package/tools/*
 package/version
