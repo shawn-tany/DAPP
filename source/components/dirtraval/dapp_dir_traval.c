@@ -141,8 +141,10 @@ DIR_STATUS_T dir_push(dir_ctx_t *ctx)
 
     DIR *pDir = NULL;
     char f_name[512] = {0};
-    dir_node_t dir_node = {0};
+    dir_node_t dir_node;
     DIR_STATUS_T ret = DIR_SUCCESS;
+
+    memset(&dir_node, 0, sizeof(dir_node));
 
     if (!ctx->is_dir)
     {

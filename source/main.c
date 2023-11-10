@@ -102,7 +102,9 @@ static STATUS dapp_user_init(int argc, char **argv, dapp_usrspace_t *usrspace)
     PTR_CHECK(usrspace);
     
     STATUS ret = DAPP_OK;
-    dapp_argsopt_t argsopt = { 0 };
+    dapp_argsopt_t argsopt;
+
+    memset(&argsopt, 0, sizeof(argsopt));
 
     /*
      * Set default parameters

@@ -296,7 +296,9 @@ int main(int argc, char *argv[ ])
 
     int argc1 = 0;
     char *argv1[3];
-    char argvList[3][256] = {0};
+    char argvList[3][256];
+
+    memset(&argvList, 0, sizeof(argvList));
 
     signal(SIGINT, signal_handle);
 
