@@ -1,26 +1,131 @@
-PORT_BIND1="02:04.0"
-PORT_BIND2="02:05.0"
+bindaction()
+{
+    if [[ "$1" == "bind" ]];
+    then 
+        if [[ $3 == igbuio ]];
+        then
+            echo "bind igb_uio $2"
+        elif [[ $3 == vfiopci ]];
+        then
+            echo "bind vfio-pci $2"
+        fi
+        
+        nicname=`$DAPP_INSTALL_PATH/tools/dpdk-devbind.py -s |grep $2 |awk -F "if=" '{print $2}' |awk -F " " '{print $1}'`
+        if [[ "${nicname}" != "" ]];
+        then 
+            ifconfig ${nicname} down
+        else
+            echo "No such ethernet device ${nicname}!"
+        fi
 
-NET_DRV=e1000
-UIO_DRV=igb_uio
+        ethdriver=`ethtool -i ${nicname} |grep driver |awk -F ": " '{print $2}'`
+        if [[ "${nicname}" != "" && ${ethdriver} != "" ]];
+        then
+            if [[ "$first" != "" ]]
+            then
+                echo $2=${ethdriver} >> $DAPP_INSTALL_PATH/ethdriver.list
+            else
+                echo $2=${ethdriver} > $DAPP_INSTALL_PATH/ethdriver.list
+                first=yes
+            fi
+        fi
+
+        if [[ $3 == igbuio ]];
+        then
+            driver_exist=`lsmod |grep igb_uio`;
+            if [[ ! $driver_exist ]]
+            then 
+                modprobe uio
+                insmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+            fi
+
+            $DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=igb_uio $2 > /dev/null 2>&1
+        elif [[ $3 == vfiopci ]];
+        then
+            $DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=vfio-pci $2 > /dev/null 2>&1
+        fi
+
+    else
+        while read -r ntdline
+        do
+            ntdname=`echo ${ntdline} |awk -F "=" '{print $1}'`
+            if [[ ${ntdname} == $2 ]];
+            then
+                ntddriver=`echo ${ntdline} |awk -F ":" '{print $2}'`
+                if [[ $3 == igbuio ]];
+                then
+                    echo "${nicname} unbind igb_uio $2, bind ${ntddriver}"
+                elif [[ $3 == vfiopci ]];
+                then
+                    echo "${nicname} unbind vfio-pci $2, bind ${ntddriver}"
+                fi 
+
+                $DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=e1000 ${igbdev} > /dev/null 2>&1
+                
+                break
+            fi
+        done < $DAPP_INSTALL_PATH/ethdriver.list
+    fi
+}
+
+function bindctl() {
+
+    unset igbdevs
+    unset vfiodevs
+
+    igbnum=0
+    vfionum=0
+
+    while read -r line 
+    do
+        igbline=`echo ${line} |grep "\[igb_uio\]={"`
+        vfioline=`echo ${line} |grep "\[vfio_pci\]={"`
+
+        if [[ "${igbline}" != "" ]];
+        then
+            igbdevs[${igbnum}]=`echo ${igbline} |awk -F "{" '{print $2}' |awk -F ", " '{print $1}'`
+            igbnum=$(($igbnum+1))
+            igbdevs[${igbnum}]=`echo ${igbline} |awk -F "}" '{print $1}' |awk -F ", " '{print $2}'`
+            igbnum=$(($igbnum+1))
+        elif [[ "${vfioline}" != "" ]];
+        then 
+            vfiodevs[${vfionum}]=`echo ${vfioline} |awk -F "{" '{print $2}' |awk -F ", " '{print $1}'`
+            vfionum=$(($vfionum+1))
+            vfiodevs[${vfionum}]=`echo ${vfioline} |awk -F "}" '{print $1}' |awk -F ", " '{print $2}'`
+            vfionum=$(($vfionum+1))
+        fi
+    done < ${DAPP_INSTALL_PATH}/config/eth.config
+
+    for igbdev in ${igbdevs[*]}
+    do
+        bindaction $1 ${igbdev} igbuio
+    done
+
+    for vfiodev in ${vfiodevs[*]}
+    do
+        bindaction $1 ${vfiodev} vfiopci
+    done
+
+    if [[ $1 == unbind ]];
+    then
+        igb_uio_exist=`lsmod |grep igb_uio`;
+        if [[ $igb_uio_exist ]]
+        then 
+            rmmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+        fi
+    fi
+}
 
 function start {
 
 	if [ "$1" = "offline" ]
 	then
 		echo "work mode offline"
-		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
+                bindctl unbind
 	else
-		igb_uio_exist=`lsmod |grep igb_uio`;
-	
-		if [[ ! $igb_uio_exist ]]
-		then 
-			modprobe uio
-			insmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
-		fi
+                bindctl bind
 	
 		echo "work mode online"
-		$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$UIO_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
 	fi
 	
 	$DAPP_INSTALL_PATH/app/dapp_deamon $DAPP_INSTALL_PATH/app/dapp
@@ -43,15 +148,8 @@ function stop {
 	    echo "dapp stop"
 	fi
 	
-	$DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=$NET_DRV $PORT_BIND1 $PORT_BIND2 > /dev/null 2>&1
-	
-	igb_uio_exist=`lsmod |grep igb_uio`;
-	
-	if [[ $igb_uio_exist ]]
-	then 
-		rmmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
-	fi
-	
+        bindctl unbind	
+
 	if [[ ! $deamon_pid_exist && ! $dapp_pid_exist ]]
 	then
 	    echo "No DAPP program is running"
@@ -79,6 +177,8 @@ function help
 	echo "	offline"
 	echo "	stop"
 	echo "	version"
+	echo "	bind"
+	echo "	unbind"
 	echo "	help"
 }
 
@@ -100,6 +200,12 @@ then
 elif [ "$1" = "version" ]
 then
 	version
+elif [ "$1" = "bind" ]
+then
+        bindctl bind
+elif [ "$1" = "unbind" ]
+then
+        bindctl unbind
 elif [ "$1" = "help" ]
 then
 	help
