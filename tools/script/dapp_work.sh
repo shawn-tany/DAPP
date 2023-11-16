@@ -11,12 +11,13 @@ bindaction()
         fi
         
         nicname=`$DAPP_INSTALL_PATH/tools/dpdk-devbind.py -s |grep $2 |awk -F "if=" '{print $2}' |awk -F " " '{print $1}'`
-        if [[ "${nicname}" != "" ]];
+        if [[ "${nicname}" == "" ]];
         then 
-            ifconfig ${nicname} down
-        else
             echo "No such ethernet device ${nicname}!"
+            return 0
         fi
+
+        ifconfig ${nicname} down
 
         ethdriver=`ethtool -i ${nicname} |grep driver |awk -F ": " '{print $2}'`
         if [[ "${nicname}" != "" && ${ethdriver} != "" ]];
@@ -36,7 +37,7 @@ bindaction()
             if [[ ! $driver_exist ]]
             then 
                 modprobe uio
-                insmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko
+                insmod $DAPP_INSTALL_PATH/kmod/igb_uio.ko > /dev/null 2>&1
             fi
 
             $DAPP_INSTALL_PATH/tools/dpdk-devbind.py --bind=igb_uio $2 > /dev/null 2>&1
@@ -46,6 +47,11 @@ bindaction()
         fi
 
     else
+        if [ ! -e $DAPP_INSTALL_PATH/ethdriver.list ];
+        then
+            return 0
+        fi
+
         while read -r ntdline
         do
             ntdname=`echo ${ntdline} |awk -F "=" '{print $1}'`
@@ -123,9 +129,8 @@ function start {
 		echo "work mode offline"
                 bindctl unbind
 	else
-                bindctl bind
-	
 		echo "work mode online"
+                bindctl bind
 	fi
 	
 	$DAPP_INSTALL_PATH/app/dapp_deamon $DAPP_INSTALL_PATH/app/dapp
