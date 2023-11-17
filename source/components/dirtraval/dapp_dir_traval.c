@@ -100,7 +100,7 @@ DIR_STATUS_T dir_init(dir_ctx_t **ctx, const char *path, int file_num)
     
     dir_node_enstack((*ctx)->stack, path, (*ctx)->is_dir, 0);
 
-    (*ctx)->last_depth = -1;
+    (*ctx)->oflag = 0;
 
     return DIR_SUCCESS;
 
@@ -153,7 +153,7 @@ DIR_STATUS_T dir_push(dir_ctx_t *ctx)
 
     while (!dapp_stack_top(ctx->stack, &dir_node, sizeof(dir_node)))
     {
-        if (ctx->last_depth == dir_node.depth)
+        if (ctx->oflag && !(ctx->oflag = 0))
         {
             return DIR_DEPTH_OVER;
         }
@@ -172,7 +172,8 @@ DIR_STATUS_T dir_push(dir_ctx_t *ctx)
             return DIR_ERR_DIR;
         }
 
-        struct dirent* ent = NULL;
+        struct dirent* ent = NULL;        
+        ctx->oflag = 1;
 
         while ((ent = readdir(pDir)))
         {
@@ -193,6 +194,8 @@ DIR_STATUS_T dir_push(dir_ctx_t *ctx)
 
             if (DT_DIR == ent->d_type) 
             {
+                ctx->oflag = 0;
+            
                 if (DIR_SUCCESS != (ret = dir_node_enstack(ctx->stack, f_name, 1, dir_node.depth + 1)))
                 {
                     return ret;
@@ -221,6 +224,11 @@ DIR_STATUS_T dir_pop(dir_ctx_t *ctx, dir_node_t *node)
     if (ctx->queue->avail == ctx->queue->total) 
     {        
         return DIR_ALL_OVER;
+    }
+
+    if (0 != dapp_queue_head(ctx->queue, node, sizeof(*node)))
+    {
+        return DIR_ERR_DEQUEUE;
     }
 
     if (0 != dapp_dequeue(ctx->queue, node, sizeof(*node)))

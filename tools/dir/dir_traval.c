@@ -61,8 +61,13 @@ int main(int argc, char *argv[ ])
         }
     } while (DIR_DEPTH_OVER == ret);
 
+    dir_uinit(ctx);
+
+    return 0;
+
 DIRTRAVEL_FAIL :
 
+    printf("dir traval failed (0x%x)\n", ret);
     dir_uinit(ctx);
 
     return 0;
