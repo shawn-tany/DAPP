@@ -44,7 +44,7 @@ int full_tcp_receive_wait()
     return 0;
 }
 
-int full_tcp_receive_poll()
+int full_tcp_receive_epoll()
 {
     return 0;
 }

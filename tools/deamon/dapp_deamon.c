@@ -107,7 +107,7 @@ static int deamon(int argc, char *argv[])
         else if (0 < pid)
         {
             /* Does the daemon receive an end signal */
-            sleep(5);
+            usleep(100);
 
             if (DEAMON_FAILED == g_deamon_status)
             {
@@ -207,6 +207,8 @@ int main(int argc, char *argv[])
                 printf("deamon %d times\n", ++restart_times);
                 fprintf(fp, "deamon %d times\n", restart_times);
             }
+
+            sleep(15);
         }
 
         if (fp)
